@@ -1,1 +1,3 @@
-# schemas package init
+"""
+app/schemas/__init__.py
+"""

@@ -1,0 +1,11 @@
+# Override for integration testing — uses a separate test DB
+services:
+  postgres:
+    environment:
+      POSTGRES_DB: swigato_test_db
+
+  api:
+    environment:
+      DATABASE_URL: postgresql+asyncpg://swigato:swigato_pass@postgres:5432/swigato_test_db
+      APP_ENV: testing
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000

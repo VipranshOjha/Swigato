@@ -1,26 +1,89 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
-from dotenv import load_dotenv
-import os
+"""
+app/database.py
+───────────────
+Async SQLAlchemy 2.x engine and session factory.
 
-load_dotenv()
+REPLACES the old synchronous database.py.
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+Key changes from previous version:
+- Sync `create_engine` → async `create_async_engine` (asyncpg driver)
+- `SessionLocal` generator → `async_sessionmaker` + async context manager
+- `Base = declarative_base()` REMOVED — Base lives in app/models/base.py
+- `Base.metadata.create_all()` REMOVED — Alembic owns the schema
+- `get_db()` sync → `get_session()` async, auto-commits/rolls back
+"""
+from __future__ import annotations
 
-engine = create_engine(DATABASE_URL)
+from collections.abc import AsyncGenerator
+from typing import Annotated
 
-SessionLocal = sessionmaker(
-    autocommit=False,
-    autoflush=False,
-    bind=engine
+from fastapi import Depends
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
 )
 
-Base = declarative_base()
+from app.config import Settings, get_settings
 
-def get_db():
-    db = SessionLocal()
+_engine = None
+_async_session_factory = None
 
-    try:
-        yield db
-    finally:
-        db.close()
+
+def create_engine(settings: Settings):
+    kwargs: dict = {
+        "echo": settings.app_debug and not settings.is_production,
+        "pool_pre_ping": True,
+        "pool_recycle": 1800,
+    }
+    if settings.is_testing:
+        from sqlalchemy.pool import NullPool
+        kwargs["poolclass"] = NullPool
+    else:
+        kwargs["pool_size"] = settings.database_pool_size
+        kwargs["max_overflow"] = settings.database_max_overflow
+        kwargs["pool_timeout"] = settings.database_pool_timeout
+
+    return create_async_engine(settings.async_database_url, **kwargs)
+
+
+def create_session_factory(engine):
+    return async_sessionmaker(
+        engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+    )
+
+
+def init_db(settings: Settings | None = None) -> None:
+    """Called once at app startup via lifespan."""
+    global _engine, _async_session_factory
+    if settings is None:
+        settings = get_settings()
+    _engine = create_engine(settings)
+    _async_session_factory = create_session_factory(_engine)
+
+
+async def close_db() -> None:
+    """Called at app shutdown."""
+    global _engine
+    if _engine is not None:
+        await _engine.dispose()
+        _engine = None
+
+
+async def get_session() -> AsyncGenerator[AsyncSession, None]:
+    """Per-request async DB session. Auto-commits on success, rolls back on error."""
+    if _async_session_factory is None:
+        raise RuntimeError("Database not initialized. Call init_db() during app startup.")
+    async with _async_session_factory() as session:
+        try:
+            yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+
+
+# Annotated alias for clean dependency injection in route handlers
+DbSession = Annotated[AsyncSession, Depends(get_session)]

@@ -1,13 +1,43 @@
-venv/
+# ─── Python ──────────────────────────────────────────────────────────────────
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.installed.cfg
+*.egg
 
+# ─── Virtual Environments ────────────────────────────────────────────────────
 .env
+venv/
+env/
+.venv/
 
-.pytest_cache/
-.mypy_cache/
+# ─── Secrets / Keys ──────────────────────────────────────────────────────────
+keys/
+*.pem
+*.p12
+*service-account*.json
 
+# ─── IDE ─────────────────────────────────────────────────────────────────────
 .idea/
 .vscode/
+*.swp
+*.swo
+.DS_Store
 
+# ─── Testing ─────────────────────────────────────────────────────────────────
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+.tox/
+
+# ─── Docker ──────────────────────────────────────────────────────────────────
+docker-compose.override.yml
+
+# ─── Alembic ─────────────────────────────────────────────────────────────────
 alembic/versions/*.pyc

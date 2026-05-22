@@ -1,0 +1,27 @@
+[project]
+name = "swigato-backend"
+version = "1.0.0"
+description = "Production-grade food delivery platform backend"
+requires-python = ">=3.12"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.backends.legacy:build"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+filterwarnings = ["error", "ignore::DeprecationWarning"]
+env = ["APP_ENV=testing"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "SIM"]
+ignore = ["B008"]  # Do not perform function calls in default arguments (FastAPI pattern)
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+ignore_missing_imports = true
+plugins = ["pydantic.mypy"]
