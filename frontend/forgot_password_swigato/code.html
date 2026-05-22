@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Forgot Password - Swigato</title>
+<!-- Google Fonts: Inter -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-high": "#e6e7f2",
+                        "on-surface": "#191b23",
+                        "on-surface-variant": "#574236",
+                        "surface-dim": "#d8d9e4",
+                        "on-primary-container": "#5e2a00",
+                        "status-error": "#E13D45",
+                        "surface-container-highest": "#e1e2ed",
+                        "primary-container": "#fc8019",
+                        "background": "#faf9ff",
+                        "on-primary-fixed": "#311300",
+                        "on-secondary-container": "#5e6177",
+                        "primary-fixed": "#ffdbc8",
+                        "tertiary-container": "#63b549",
+                        "secondary-fixed": "#dee1fa",
+                        "surface-variant": "#e1e2ed",
+                        "status-success": "#60B246",
+                        "on-tertiary-container": "#0c4200",
+                        "outline": "#8b7264",
+                        "surface-container-lowest": "#ffffff",
+                        "surface": "#faf9ff",
+                        "primary-fixed-dim": "#ffb689",
+                        "primary": "#984800",
+                        "tertiary-fixed": "#a1f882",
+                        "surface-background": "#FFFFFF",
+                        "secondary": "#5a5d73",
+                        "surface-container-low": "#f2f3fe",
+                        "inverse-on-surface": "#eff0fb",
+                        "on-primary": "#ffffff",
+                        "on-secondary-fixed": "#161b2d",
+                        "error-container": "#ffdad6",
+                        "on-error-container": "#93000a",
+                        "on-secondary": "#ffffff",
+                        "surface-dark": "#171A29",
+                        "surface-container": "#ecedf8",
+                        "error": "#ba1a1a",
+                        "on-tertiary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "surface-bright": "#faf9ff",
+                        "tertiary": "#1b6d01",
+                        "status-warning": "#DB7C38",
+                        "on-secondary-fixed-variant": "#42465a",
+                        "on-tertiary-fixed": "#032100",
+                        "secondary-fixed-dim": "#c2c5de",
+                        "secondary-container": "#dbdef8",
+                        "surface-tint": "#984800",
+                        "outline-variant": "#dec1b0",
+                        "on-primary-fixed-variant": "#733500",
+                        "tertiary-fixed-dim": "#86db69",
+                        "on-tertiary-fixed-variant": "#115300",
+                        "inverse-surface": "#2d3038",
+                        "inverse-primary": "#ffb689",
+                        "on-background": "#191b23"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "base": "8px",
+                        "container-margin": "16px",
+                        "card-padding": "12px",
+                        "section-gap": "32px",
+                        "gutter": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Inter"],
+                        "body-md": ["Inter"],
+                        "price-display": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-xl": ["Inter"],
+                        "label-bold": ["Inter"],
+                        "headline-lg-mobile": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "price-display": ["16px", { "lineHeight": "20px", "fontWeight": "600" }],
+                        "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+                        "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-xl": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "800" }],
+                        "label-bold": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "headline-lg-mobile": ["20px", { "lineHeight": "28px", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-surface-container-low min-h-screen flex items-center justify-center p-container-margin antialiased selection:bg-primary-fixed selection:text-on-primary-fixed">
+<!-- Main Container -->
+<main class="w-full max-w-md">
+<!-- Brand Logo -->
+<div class="text-center mb-section-gap">
+<h1 class="font-headline-xl text-headline-xl text-primary-container tracking-tight">Swigato</h1>
+</div>
+<!-- Card -->
+<div class="bg-surface rounded-xl shadow-md p-8 border border-surface-container">
+<!-- Header -->
+<div class="mb-section-gap text-center">
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-2">Forgot Password</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">
+                    Enter the email address associated with your account and we'll send you a link to reset your password.
+                </p>
+</div>
+<!-- Form -->
+<form onsubmit="event.preventDefault();">
+<!-- Email Input -->
+<div class="mb-6">
+<label class="block font-label-bold text-label-bold text-on-surface-variant mb-2" for="email">Email Address</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-secondary" style="font-size: 20px;">mail</span>
+<input class="w-full bg-surface-container-low border-none rounded-lg pl-10 pr-4 py-3 font-body-md text-body-md text-on-surface focus:ring-2 focus:ring-primary-container focus:bg-surface transition-all placeholder:text-secondary-fixed-dim" id="email" name="email" placeholder="name@example.com" required="" type="email"/>
+</div>
+</div>
+<!-- Submit Button -->
+<button class="w-full bg-primary-container text-on-primary font-label-bold text-label-bold rounded-lg py-4 px-6 hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-sm" type="submit">
+                    Send Reset Link
+                    <span class="material-symbols-outlined" style="font-size: 18px; font-variation-settings: 'wght' 600;">arrow_forward</span>
+</button>
+</form>
+<!-- Back to Login Link -->
+<div class="mt-8 text-center">
+<a class="inline-flex items-center gap-2 font-body-sm text-body-sm text-secondary hover:text-primary-container transition-colors group" href="#">
+<span class="material-symbols-outlined group-hover:-translate-x-1 transition-transform" style="font-size: 16px;">arrow_back</span>
+                    Back to Login
+                </a>
+</div>
+</div>
+<!-- Optional Support Link -->
+<div class="mt-6 text-center">
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                Need help? <a class="text-primary hover:underline font-label-bold text-label-bold" href="#">Contact Support</a>
+</p>
+</div>
+</main>
+</body></html>
