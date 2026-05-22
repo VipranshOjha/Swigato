@@ -18,7 +18,7 @@ from datetime import UTC, datetime, timedelta
 
 import structlog
 
-from app.config import get_settings
+from app import config
 from app.core.constants import AuditAction, UserRole
 from app.core.exceptions import (
     EmailAlreadyExistsError,
@@ -31,7 +31,6 @@ from app.core.exceptions import (
     UserNotFoundError,
 )
 from app.core.security import (
-    check_needs_rehash,
     create_access_token,
     create_email_verification_token,
     create_password_reset_token,
@@ -61,7 +60,7 @@ class AuthService:
 
     def __init__(self, user_repo: UserRepository) -> None:
         self.user_repo = user_repo
-        self.settings = get_settings()
+        self.settings = config.get_settings()
 
     # ─── Registration ─────────────────────────────────────────────────────────
 
@@ -141,7 +140,8 @@ class AuthService:
         if not user or not user.password_hash:
             raise InvalidCredentialsError()
 
-        if not verify_password(data.password, user.password_hash):
+        is_valid, updated_hash = verify_password(data.password, user.password_hash)
+        if not is_valid:
             await logger.awarning("login_failed", email=data.email, ip=client_ip)
             raise InvalidCredentialsError()
 
@@ -153,9 +153,9 @@ class AuthService:
             raise EmailNotVerifiedError()
 
         # Rehash if argon2 parameters have been upgraded (transparent upgrade)
-        if check_needs_rehash(user.password_hash):
+        if updated_hash:
             await self.user_repo.update(
-                user, password_hash=hash_password(data.password)
+                user, password_hash=updated_hash
             )
 
         access_token, jti = create_access_token(
@@ -314,7 +314,8 @@ class AuthService:
         if not user or not user.password_hash:
             raise UserNotFoundError()
 
-        if not verify_password(data.current_password, user.password_hash):
+        is_valid, _ = verify_password(data.current_password, user.password_hash)
+        if not is_valid:
             raise InvalidCredentialsError("Current password is incorrect.")
 
         await self.user_repo.update(user, password_hash=hash_password(data.new_password))

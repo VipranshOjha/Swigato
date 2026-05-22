@@ -9,7 +9,7 @@ from __future__ import annotations
 import redis.asyncio as aioredis
 from redis.asyncio import Redis
 
-from app.config import get_settings
+from app import config
 
 _cache_client: Redis | None = None
 _rate_limit_client: Redis | None = None
@@ -22,7 +22,7 @@ def _build_redis_url(base_url: str, db: int) -> str:
 
 def init_redis() -> None:
     global _cache_client, _rate_limit_client
-    settings = get_settings()
+    settings = config.get_settings()
     _cache_client = aioredis.from_url(
         _build_redis_url(settings.redis_url, settings.redis_cache_db),
         encoding="utf-8",

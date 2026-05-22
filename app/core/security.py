@@ -24,7 +24,7 @@ from jose import JWTError, jwt
 from pwdlib import PasswordHash
 from pwdlib.hashers.argon2 import Argon2Hasher
 
-from app.config import get_settings
+from app import config
 from app.core.exceptions import TokenExpiredError, TokenInvalidError
 
 logger = structlog.get_logger(__name__)
@@ -40,27 +40,21 @@ def hash_password(plain: str) -> str:
     return _pwd_hasher.hash(plain)
 
 
-def verify_password(plain: str, hashed: str) -> bool:
-    """Verify a plain-text password against a stored hash."""
-    return _pwd_hasher.verify(plain, hashed)
-
-
-def check_needs_rehash(hashed: str) -> bool:
+def verify_password(plain: str, hashed: str) -> tuple[bool, str | None]:
+    """Verify a plain-text password against a stored hash.
+    Returns (is_valid, updated_hash) where updated_hash is present if the hash should be updated.
     """
-    Check if a stored hash needs to be upgraded.
-    Call after verify_password — if True, rehash and save the new hash.
-    """
-    return _pwd_hasher.check_needs_rehash(hashed)
+    return _pwd_hasher.verify_and_update(plain, hashed)
 
 
 # ─── JWT ──────────────────────────────────────────────────────────────────────
 
 def _get_private_key() -> str:
-    return get_settings().jwt_private_key
+    return config.get_settings().jwt_private_key
 
 
 def _get_public_key() -> str:
-    return get_settings().jwt_public_key
+    return config.get_settings().jwt_public_key
 
 
 def create_access_token(
@@ -79,7 +73,7 @@ def create_access_token(
     Returns:
         Tuple of (encoded_jwt, jti) where jti is the unique token ID.
     """
-    settings = get_settings()
+    settings = config.get_settings()
     now = datetime.now(UTC)
     jti = secrets.token_hex(16)
 
@@ -130,7 +124,7 @@ def decode_access_token(token: str) -> dict[str, Any]:
         TokenExpiredError: If the token has expired.
         TokenInvalidError: If the token is malformed or signature invalid.
     """
-    settings = get_settings()
+    settings = config.get_settings()
     try:
         payload = jwt.decode(
             token,
@@ -148,7 +142,7 @@ def decode_access_token(token: str) -> dict[str, Any]:
 
 def create_otp(length: int | None = None) -> str:
     """Generate a numeric OTP of given length."""
-    settings = get_settings()
+    settings = config.get_settings()
     n = length or settings.otp_length
     # secrets.randbelow is cryptographically secure
     return "".join(str(secrets.randbelow(10)) for _ in range(n))

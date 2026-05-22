@@ -14,7 +14,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import computed_field, model_validator
+from pydantic import computed_field, model_validator, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -34,6 +34,15 @@ class Settings(BaseSettings):
     app_name: str = "Swigato"
     app_version: str = "1.0.0"
     allowed_origins: list[str] = ["http://localhost:3000"]
+
+    @field_validator("allowed_origins", mode="before")
+    @classmethod
+    def assemble_cors_origins(cls, v: str | list[str]) -> list[str]:
+        if isinstance(v, str) and not v.startswith("["):
+            return [i.strip() for i in v.split(",")]
+        elif isinstance(v, (list, str)):
+            return v  # type: ignore
+        raise ValueError(v)
 
     # ─── Security ─────────────────────────────────────────────────────────────
     # RS256 asymmetric signing — generate with:

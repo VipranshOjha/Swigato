@@ -26,7 +26,7 @@ from fastapi import FastAPI
 from fastapi.responses import ORJSONResponse
 
 from app.api.v1.router import api_router
-from app.config import get_settings
+from app import config
 from app.core.exceptions import register_exception_handlers
 from app.core.middleware import register_middleware
 from app.database import close_db, init_db
@@ -65,7 +65,7 @@ async def _seed_roles() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    settings = get_settings()
+    settings = config.get_settings()
     await logger.ainfo("app_starting", env=settings.app_env, version=settings.app_version)
 
     init_db(settings)
@@ -81,7 +81,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 
 def create_app() -> FastAPI:
-    settings = get_settings()
+    settings = config.get_settings()
 
     app = FastAPI(
         title=settings.app_name,

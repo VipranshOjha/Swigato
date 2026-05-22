@@ -32,7 +32,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     # ─── PostGIS extension (required for geo queries in later phases) ──────────
-    op.execute("CREATE EXTENSION IF NOT EXISTS postgis")
+    #op.execute("CREATE EXTENSION IF NOT EXISTS postgis")
     op.execute("CREATE EXTENSION IF NOT EXISTS pgcrypto")  # For gen_random_uuid()
 
     # ─── users ────────────────────────────────────────────────────────────────

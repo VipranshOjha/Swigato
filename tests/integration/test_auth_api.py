@@ -14,7 +14,7 @@ from httpx import AsyncClient
 
 @pytest.mark.asyncio
 class TestRegister:
-    async def test_register_success(self, client: AsyncClient, seed_roles) -> None:
+    async def test_register_success(self, client: AsyncClient) -> None:
         response = await client.post("/api/v1/auth/register", json={
             "first_name": "Jane",
             "last_name": "Doe",
@@ -37,7 +37,7 @@ class TestRegister:
         assert response.status_code == 409
         assert response.json()["error"]["code"] == "EMAIL_EXISTS"
 
-    async def test_register_weak_password(self, client: AsyncClient, seed_roles) -> None:
+    async def test_register_weak_password(self, client: AsyncClient) -> None:
         response = await client.post("/api/v1/auth/register", json={
             "first_name": "Weak",
             "last_name": "Pass",
@@ -46,7 +46,7 @@ class TestRegister:
         })
         assert response.status_code == 422
 
-    async def test_register_invalid_email(self, client: AsyncClient, seed_roles) -> None:
+    async def test_register_invalid_email(self, client: AsyncClient) -> None:
         response = await client.post("/api/v1/auth/register", json={
             "first_name": "Bad",
             "last_name": "Email",
@@ -70,7 +70,7 @@ class TestLogin:
         assert "access_token" in verified_user_tokens
         assert verified_user_tokens["access_token"] != ""
 
-    async def test_login_wrong_password(self, client: AsyncClient, seed_roles, db_session) -> None:
+    async def test_login_wrong_password(self, client: AsyncClient, db_session) -> None:
         # Register and verify a fresh user
         await client.post("/api/v1/auth/register", json={
             "first_name": "Login",
@@ -83,7 +83,7 @@ class TestLogin:
         await db_session.execute(
             update(User).where(User.email == "logintest@swigato.com").values(is_email_verified=True)
         )
-        await db_session.flush()
+        await db_session.commit()
 
         response = await client.post("/api/v1/auth/login", json={
             "email": "logintest@swigato.com",

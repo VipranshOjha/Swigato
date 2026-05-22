@@ -53,8 +53,8 @@ class AuditLog(Base):
     ip_address: Mapped[str | None] = mapped_column(INET, nullable=True)
     user_agent: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    # Extra metadata (e.g. reason for suspension)
-    metadata: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    # Extra event_metadata (e.g. reason for suspension)
+    event_metadata: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

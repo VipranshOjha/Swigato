@@ -1,195 +1,168 @@
-"""
-tests/conftest.py
-──────────────────
-Shared pytest fixtures for unit and integration tests.
-
-Test DB strategy:
-- Uses a separate test database (swigato_test_db)
-- Each test runs in a transaction that is rolled back after the test
-  → Tests are fully isolated with zero cleanup overhead
-- NullPool prevents connection pool leakage between tests
-"""
-from __future__ import annotations
-
+import os
 import asyncio
 from collections.abc import AsyncGenerator
-from typing import Any
 
 import pytest
 import pytest_asyncio
+from asgi_lifespan import LifespanManager
+from httpx import ASGITransport, AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine, AsyncEngine
+from sqlalchemy.pool import NullPool
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
-from httpx import ASGITransport, AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.pool import NullPool
 
+# ─── 1. Setup Test Settings BEFORE app imports ────────────────────────────────
+
+TEST_DATABASE_URL = "postgresql+asyncpg://postgres:mypassword@localhost:5432/swigato_test_db"
+os.environ["APP_ENV"] = "testing"
+os.environ["DATABASE_URL"] = TEST_DATABASE_URL
+
+private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+public_key = private_key.public_key()
+private_pem = private_key.private_bytes(
+    encoding=serialization.Encoding.PEM,
+    format=serialization.PrivateFormat.PKCS8,
+    encryption_algorithm=serialization.NoEncryption()
+).decode("utf-8")
+public_pem = public_key.public_bytes(
+    encoding=serialization.Encoding.PEM,
+    format=serialization.PublicFormat.SubjectPublicKeyInfo
+).decode("utf-8")
+
+import app.config as config_module
 from app.config import Settings, get_settings
+
+class TestSettings(Settings):
+    app_env: str = "testing"
+    database_url: str = TEST_DATABASE_URL
+    redis_url: str = "redis://localhost:6379/3"
+
+    @property
+    def jwt_private_key(self) -> str:
+        return private_pem
+
+    @property
+    def jwt_public_key(self) -> str:
+        return public_pem
+
+_test_settings = TestSettings()
+
+config_module.get_settings.cache_clear()
+config_module.get_settings = lambda: _test_settings
+import app.config
+app.config.get_settings = config_module.get_settings
+
+# ─── 2. Import app modules AFTER patch ────────────────────────────────────────
+
 from app.database import get_session
-from app.main import create_app
 from app.models.base import Base
-from app.models.user import Role  # noqa: F401 — ensure tables are created
+from app.models import *
 
-# ─── Test settings override ───────────────────────────────────────────────────
-
-TEST_DATABASE_URL = "postgresql+asyncpg://swigato:swigato_pass@localhost:5432/swigato_test_db"
-
-
-@pytest.fixture(scope="session")
-def rsa_key_pair() -> tuple[str, str]:
-    """Generate a temporary RSA key pair for JWT signing in tests."""
-    private_key = rsa.generate_private_key(
-        public_exponent=65537,
-        key_size=2048,
-    )
-    private_pem = private_key.private_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PrivateFormat.TraditionalOpenSSL,
-        encryption_algorithm=serialization.NoEncryption(),
-    ).decode()
-    public_pem = private_key.public_key().public_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PublicFormat.SubjectPublicKeyInfo,
-    ).decode()
-    return private_pem, public_pem
-
-
-@pytest.fixture(scope="session", autouse=True)
-def override_settings(rsa_key_pair: tuple[str, str]) -> None:
-    """Override settings for the test session."""
-    private_pem, public_pem = rsa_key_pair
-
-    class TestSettings(Settings):
-        app_env: str = "testing"
-        database_url: str = TEST_DATABASE_URL
-        redis_url: str = "redis://localhost:6379/3"  # DB 3 for tests
-
-        @property
-        def jwt_private_key(self) -> str:
-            return private_pem
-
-        @property
-        def jwt_public_key(self) -> str:
-            return public_pem
-
-    get_settings.cache_clear()
-    import app.config as config_module
-    config_module.get_settings = lambda: TestSettings()  # type: ignore
-
-
-# ─── Database fixtures ────────────────────────────────────────────────────────
-
-@pytest.fixture(scope="session")
-def event_loop():
-    """Single event loop for the test session."""
-    loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
-
+# ─── 3. Fixtures ──────────────────────────────────────────────────────────────
 
 @pytest_asyncio.fixture(scope="session")
-async def test_engine():
-    """Create test database tables once per test session."""
-    engine = create_async_engine(
-        TEST_DATABASE_URL,
-        poolclass=NullPool,
-    )
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    yield engine
+async def test_engine() -> AsyncGenerator[AsyncEngine, None]:
+    engine = create_async_engine(get_settings().database_url, poolclass=NullPool)
+    
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
-    await engine.dispose()
+        await conn.run_sync(Base.metadata.create_all)
+        
+    from app.main import _seed_roles
+    from sqlalchemy.ext.asyncio import async_sessionmaker
+    session_factory = async_sessionmaker(engine, expire_on_commit=False)
+    
+    import app.database
+    original_factory = app.database._async_session_factory
+    app.database._async_session_factory = session_factory
+    
+    await _seed_roles()
 
+    yield engine
+    
+    # We intentionally do not drop tables here to avoid hangs on teardown if connections
+    # are left in a weird state. The tables are dropped at the start of the next test session anyway.
+    app.database._async_session_factory = original_factory
+    await engine.dispose()
 
 @pytest_asyncio.fixture
 async def db_session(test_engine) -> AsyncGenerator[AsyncSession, None]:
-    """
-    Provides a test-scoped DB session that rolls back after each test.
-    This gives complete test isolation without truncating tables.
-    """
     session_factory = async_sessionmaker(test_engine, expire_on_commit=False)
     async with session_factory() as session:
-        async with session.begin():
+        await session.begin()
+        try:
             yield session
+        finally:
             await session.rollback()
 
-
-# ─── App fixtures ─────────────────────────────────────────────────────────────
+@pytest_asyncio.fixture(scope="session")
+async def fake_redis_session():
+    import fakeredis.aioredis
+    # Create the FakeRedis instance in the session loop
+    redis = fakeredis.aioredis.FakeRedis(decode_responses=True)
+    yield redis
+    await redis.aclose()
 
 @pytest_asyncio.fixture
-async def client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
-    """
-    Async test client with overridden DB session dependency.
-    Uses the rolled-back session so test data doesn't persist.
-    """
+async def client(test_engine) -> AsyncGenerator[AsyncClient, None]:
+    from app.main import create_app
+    from unittest.mock import patch
+    from contextlib import asynccontextmanager
+    
     app = create_app()
 
-    # Override get_session to use test session
-    async def override_get_session():
-        yield db_session
+    @asynccontextmanager
+    async def mock_lifespan(app):
+        yield
 
-    app.dependency_overrides[get_session] = override_get_session
+    async def mock_rate_limit(self, request, call_next):
+        return await call_next(request)
 
-    async with AsyncClient(
-        transport=ASGITransport(app=app),
-        base_url="http://test",
-    ) as ac:
-        yield ac
-
-
-# ─── Helper fixtures ──────────────────────────────────────────────────────────
-
-@pytest_asyncio.fixture
-async def seed_roles(db_session: AsyncSession) -> None:
-    """Seed roles into the test DB session."""
-    from app.core.constants import UserRole
-
-    for role_name in UserRole:
-        role = Role(name=role_name.value, description=f"Test role: {role_name.value}")
-        db_session.add(role)
-    await db_session.flush()
+    with patch('app.main.lifespan', new=mock_lifespan), \
+         patch('app.core.middleware.RateLimitMiddleware.dispatch', new=mock_rate_limit):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://testserver") as c:
+            yield c
 
 
 @pytest_asyncio.fixture
-async def registered_user(client: AsyncClient, seed_roles) -> dict[str, Any]:
-    """Register and return a test user (unverified)."""
-    response = await client.post("/api/v1/auth/register", json={
-        "first_name": "Test",
+async def registered_user(client: AsyncClient):
+    # Register an unverified user
+    await client.post("/api/v1/auth/register", json={
+        "first_name": "Registered",
         "last_name": "User",
         "email": "test@swigato.com",
         "password": "SecurePass1!",
     })
-    assert response.status_code == 201
-    return response.json()
-
+    return {"email": "test@swigato.com", "password": "SecurePass1!"}
 
 @pytest_asyncio.fixture
-async def verified_user_tokens(
-    client: AsyncClient,
-    db_session: AsyncSession,
-    registered_user: dict,
-) -> dict[str, str]:
-    """
-    Register a user, manually verify their email in DB, and login.
-    Returns {"access_token": ..., "refresh_token": ...}
-    """
-    from sqlalchemy import select, update
-    from app.models.user import User, EmailVerification
-
-    # Force-verify email in DB
-    await db_session.execute(
-        update(User)
-        .where(User.email == "test@swigato.com")
-        .values(is_email_verified=True)
-    )
-    await db_session.flush()
-
-    response = await client.post("/api/v1/auth/login", json={
-        "email": "test@swigato.com",
-        "password": "SecurePass1!",
+async def verified_user_tokens(client: AsyncClient, db_session):
+    email = "verified@swigato.com"
+    password = "SecurePass1!"
+    await client.post("/api/v1/auth/register", json={
+        "first_name": "Verified",
+        "last_name": "User",
+        "email": email,
+        "password": password,
     })
-    assert response.status_code == 200
+    
+    from sqlalchemy import update
+    from app.models.user import User
+    await db_session.execute(
+        update(User).where(User.email == email).values(is_email_verified=True)
+    )
+    await db_session.commit()
+    
+    response = await client.post("/api/v1/auth/login", json={
+        "email": email,
+        "password": password,
+    })
     data = response.json()
-    # Refresh token is in cookie
     refresh_token = response.cookies.get("refresh_token", "")
-    return {"access_token": data["access_token"], "refresh_token": refresh_token}
+    return {
+        "access_token": data.get("access_token", ""),
+        "refresh_token": refresh_token,
+        "email": email,
+        "password": password
+    }

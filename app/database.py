@@ -24,7 +24,8 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-from app.config import Settings, get_settings
+from app.config import Settings
+from app import config
 
 _engine = None
 _async_session_factory = None
@@ -59,7 +60,7 @@ def init_db(settings: Settings | None = None) -> None:
     """Called once at app startup via lifespan."""
     global _engine, _async_session_factory
     if settings is None:
-        settings = get_settings()
+        settings = config.get_settings()
     _engine = create_engine(settings)
     _async_session_factory = create_session_factory(_engine)
 
