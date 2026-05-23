@@ -7,15 +7,15 @@ Add new phase routers here as they're implemented.
 from fastapi import APIRouter
 
 from app.api.v1 import auth
+from app.api.v1 import users
 
 api_router = APIRouter(prefix="/api/v1")
 
 # Phase 1
 api_router.include_router(auth.router)
 
-# Phase 2 — Users (uncomment when implemented)
-# from app.api.v1 import users
-# api_router.include_router(users.router)
+# Phase 2 — Users
+api_router.include_router(users.router, prefix="/users", tags=["users"])
 
 # Phase 3 — Restaurants
 # from app.api.v1 import restaurants

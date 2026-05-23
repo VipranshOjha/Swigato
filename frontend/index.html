@@ -114,11 +114,12 @@
                 <span class="font-outfit font-black text-3xl text-primary-container tracking-tight">Swigato</span>
                 <span class="bg-primary-fixed text-primary font-bold text-xs px-2.5 py-0.5 rounded-full border border-primary-fixed-dim uppercase tracking-wider">Dev Portal</span>
             </div>
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-4" id="header-auth-section">
                 <a href="DESIGN.md" class="text-on-surface-variant hover:text-primary transition-colors font-label-bold text-label-bold hover:bg-surface-container-low px-3 py-2 rounded-lg flex items-center gap-1">
                     <span class="material-symbols-outlined text-[20px]">palette</span>
-                    <span>Design Spec</span>
+                    <span class="hidden sm:inline">Design Spec</span>
                 </a>
+                <a href="login.html" id="header-login-btn" class="bg-primary-container text-white font-label-bold text-label-bold py-2 px-4 rounded-lg shadow-sm hover:shadow-md transition-all">Login</a>
             </div>
         </div>
     </header>
@@ -312,5 +313,6 @@
             </div>
         </div>
     </footer>
+<script type="module" src="/js/dashboard.js"></script>
 </body>
 </html>

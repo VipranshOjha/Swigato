@@ -158,98 +158,14 @@
 <h1 class="font-headline-xl text-headline-xl text-on-surface tracking-tight">Manage Addresses</h1>
 <p class="font-body-md text-body-md text-on-surface-variant mt-1">Add, edit, or delete your delivery locations.</p>
 </div>
-<button class="bg-primary-container text-on-primary font-label-bold text-label-bold rounded-DEFAULT px-6 py-3 shadow-sm hover:shadow-md transition-shadow flex items-center justify-center gap-2 w-full md:w-auto hover:opacity-90 active:scale-95">
+<button id="addAddressBtn" class="bg-primary-container text-on-primary font-label-bold text-label-bold rounded-DEFAULT px-6 py-3 shadow-sm hover:shadow-md transition-shadow flex items-center justify-center gap-2 w-full md:w-auto hover:opacity-90 active:scale-95">
 <span class="material-symbols-outlined text-[18px] icon-filled" data-icon="add">add</span>
                 Add New Address
             </button>
 </div>
 <!-- Address Grid -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
-<!-- Address Card: Home (Default) -->
-<div class="bg-surface-container-lowest rounded-lg border border-primary-container p-card-padding shadow-sm hover:shadow-md transition-shadow relative flex flex-col overflow-hidden">
-<div class="absolute top-0 left-0 w-1 h-full bg-primary-container"></div>
-<div class="flex items-start justify-between mb-3 pl-2">
-<div class="flex items-center gap-2">
-<span class="material-symbols-outlined text-primary-container icon-filled" data-icon="home">home</span>
-<h2 class="font-headline-md text-headline-md text-on-surface">Home</h2>
-</div>
-<span class="bg-primary-fixed text-primary font-body-sm text-body-sm px-2.5 py-0.5 rounded-full border border-primary-fixed-dim">Default</span>
-</div>
-<div class="font-body-md text-body-md text-on-surface-variant flex-grow pl-2">
-<p>Flat 402, Skyline Apartments</p>
-<p>12th Main Road, Indiranagar</p>
-<p>Bangalore, Karnataka 560038</p>
-<p class="mt-2 font-body-sm text-body-sm text-secondary">Phone: +91 98765 43210</p>
-</div>
-<div class="flex items-center gap-4 mt-6 pt-4 border-t border-surface-variant pl-2">
-<button class="text-primary-container hover:text-primary transition-colors font-label-bold text-label-bold flex items-center gap-1 active:scale-95">
-<span class="material-symbols-outlined text-[16px]" data-icon="edit">edit</span>
-                        Edit
-                    </button>
-<button class="text-status-error hover:opacity-80 transition-colors font-label-bold text-label-bold flex items-center gap-1 active:scale-95">
-<span class="material-symbols-outlined text-[16px]" data-icon="delete">delete</span>
-                        Delete
-                    </button>
-</div>
-</div>
-<!-- Address Card: Work -->
-<div class="bg-surface-container-lowest rounded-lg border border-outline-variant p-card-padding shadow-sm hover:shadow-md hover:border-outline transition-all relative flex flex-col group">
-<div class="flex items-start justify-between mb-3">
-<div class="flex items-center gap-2 text-on-surface">
-<span class="material-symbols-outlined" data-icon="work">work</span>
-<h2 class="font-headline-md text-headline-md">Work</h2>
-</div>
-</div>
-<div class="font-body-md text-body-md text-on-surface-variant flex-grow">
-<p>Tech Park Phase 2, Block C</p>
-<p>Outer Ring Road, Bellandur</p>
-<p>Bangalore, Karnataka 560103</p>
-<p class="mt-2 font-body-sm text-body-sm text-secondary">Phone: +91 98765 43210</p>
-</div>
-<div class="flex items-center gap-4 mt-6 pt-4 border-t border-surface-variant">
-<button class="text-primary-container hover:text-primary transition-colors font-label-bold text-label-bold flex items-center gap-1 active:scale-95">
-<span class="material-symbols-outlined text-[16px]" data-icon="edit">edit</span>
-                        Edit
-                    </button>
-<button class="text-status-error hover:opacity-80 transition-colors font-label-bold text-label-bold flex items-center gap-1 active:scale-95">
-<span class="material-symbols-outlined text-[16px]" data-icon="delete">delete</span>
-                        Delete
-                    </button>
-<div class="flex-grow"></div>
-<button class="text-on-surface-variant hover:text-primary-container transition-colors font-label-bold text-label-bold text-right active:scale-95 opacity-0 group-hover:opacity-100 md:opacity-100">
-                        Set as Default
-                    </button>
-</div>
-</div>
-<!-- Address Card: Other -->
-<div class="bg-surface-container-lowest rounded-lg border border-outline-variant p-card-padding shadow-sm hover:shadow-md hover:border-outline transition-all relative flex flex-col group">
-<div class="flex items-start justify-between mb-3">
-<div class="flex items-center gap-2 text-on-surface">
-<span class="material-symbols-outlined" data-icon="location_on">location_on</span>
-<h2 class="font-headline-md text-headline-md">Parents Home</h2>
-</div>
-</div>
-<div class="font-body-md text-body-md text-on-surface-variant flex-grow">
-<p>15/2, Old Post Office Road</p>
-<p>Malleswaram</p>
-<p>Bangalore, Karnataka 560003</p>
-<p class="mt-2 font-body-sm text-body-sm text-secondary">Phone: +91 99887 76655</p>
-</div>
-<div class="flex items-center gap-4 mt-6 pt-4 border-t border-surface-variant">
-<button class="text-primary-container hover:text-primary transition-colors font-label-bold text-label-bold flex items-center gap-1 active:scale-95">
-<span class="material-symbols-outlined text-[16px]" data-icon="edit">edit</span>
-                        Edit
-                    </button>
-<button class="text-status-error hover:opacity-80 transition-colors font-label-bold text-label-bold flex items-center gap-1 active:scale-95">
-<span class="material-symbols-outlined text-[16px]" data-icon="delete">delete</span>
-                        Delete
-                    </button>
-<div class="flex-grow"></div>
-<button class="text-on-surface-variant hover:text-primary-container transition-colors font-label-bold text-label-bold text-right active:scale-95 opacity-0 group-hover:opacity-100 md:opacity-100">
-                        Set as Default
-                    </button>
-</div>
-</div>
+<div id="addressesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
+    <!-- Addresses will be injected here via JS -->
 </div>
 </main>
 <!-- BottomNavBar (Shared Component - Mobile Only) -->
@@ -308,4 +224,51 @@
 <style>
         .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
     </style>
+<!-- Address Modal -->
+<div id="addressModal" class="hidden fixed inset-0 z-[100] flex justify-center items-center">
+    <div class="absolute inset-0 bg-black/50" id="addressModalBackdrop"></div>
+    <div class="bg-surface-container-lowest w-full max-w-md p-6 rounded-xl shadow-xl z-10 relative">
+        <h2 id="addressModalTitle" class="font-headline-lg text-headline-lg text-on-surface mb-4">Add Address</h2>
+        <form id="addressForm" class="space-y-4">
+            <input type="hidden" id="addressId" />
+            <div>
+                <label class="block font-label-bold text-label-bold text-on-surface-variant mb-1">Label</label>
+                <input id="addressLabel" class="w-full bg-[#F2F2F3] border-none rounded-lg px-4 py-3 font-body-md focus:ring-2 focus:ring-primary-container" type="text" placeholder="e.g. Home, Work" required />
+            </div>
+            <div>
+                <label class="block font-label-bold text-label-bold text-on-surface-variant mb-1">Address Line 1</label>
+                <input id="addressLine1" class="w-full bg-[#F2F2F3] border-none rounded-lg px-4 py-3 font-body-md focus:ring-2 focus:ring-primary-container" type="text" placeholder="Street, building name" required />
+            </div>
+            <div>
+                <label class="block font-label-bold text-label-bold text-on-surface-variant mb-1">City</label>
+                <input id="addressCity" class="w-full bg-[#F2F2F3] border-none rounded-lg px-4 py-3 font-body-md focus:ring-2 focus:ring-primary-container" type="text" placeholder="City" required />
+            </div>
+            <div class="flex gap-4">
+                <div class="w-1/2">
+                    <label class="block font-label-bold text-label-bold text-on-surface-variant mb-1">State</label>
+                    <input id="addressState" class="w-full bg-[#F2F2F3] border-none rounded-lg px-4 py-3 font-body-md focus:ring-2 focus:ring-primary-container" type="text" placeholder="State" required />
+                </div>
+                <div class="w-1/2">
+                    <label class="block font-label-bold text-label-bold text-on-surface-variant mb-1">Postal Code</label>
+                    <input id="addressPostalCode" class="w-full bg-[#F2F2F3] border-none rounded-lg px-4 py-3 font-body-md focus:ring-2 focus:ring-primary-container" type="text" placeholder="Postal Code" required />
+                </div>
+            </div>
+            <div>
+                <label class="block font-label-bold text-label-bold text-on-surface-variant mb-1">Country</label>
+                <input id="addressCountry" class="w-full bg-[#F2F2F3] border-none rounded-lg px-4 py-3 font-body-md focus:ring-2 focus:ring-primary-container" type="text" placeholder="Country" required />
+            </div>
+            <div class="flex items-center gap-2 mt-2">
+                <input id="addressIsDefault" type="checkbox" class="w-5 h-5 text-primary-container border-outline-variant rounded focus:ring-primary-container" />
+                <label for="addressIsDefault" class="font-body-md text-on-surface-variant">Set as Default Address</label>
+            </div>
+            <div class="flex justify-end gap-3 mt-6">
+                <button type="button" id="closeModalBtn" class="px-4 py-2 bg-surface-container-high rounded-lg font-label-bold text-on-surface hover:bg-surface-dim">Cancel</button>
+                <button type="submit" id="saveAddressBtn" class="px-6 py-2 bg-primary-container text-white rounded-lg font-label-bold hover:bg-[#E06B0D]">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script type="module" src="/js/protected.js"></script>
+<script type="module" src="/js/address-management.js"></script>
 </body></html>

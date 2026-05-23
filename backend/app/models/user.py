@@ -79,6 +79,11 @@ class User(Base, TimestampMixin, SoftDeleteMixin):
     referred_by: Mapped[User | None] = relationship(
         "User", remote_side="User.id", foreign_keys=[referred_by_id]
     )
+    addresses: Mapped[list["Address"]] = relationship(
+        "Address",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
 
     @property
     def full_name(self) -> str:
@@ -146,10 +151,10 @@ class RefreshToken(Base):
 
     @property
     def is_valid(self) -> bool:
-        from datetime import UTC
+        from datetime import timezone
         return (
             self.revoked_at is None
-            and self.expires_at > datetime.now(UTC)
+            and self.expires_at > datetime.now(timezone.utc)
         )
 
 
@@ -171,8 +176,8 @@ class EmailVerification(Base):
 
     @property
     def is_valid(self) -> bool:
-        from datetime import UTC
-        return self.used_at is None and self.expires_at > datetime.now(UTC)
+        from datetime import timezone
+        return self.used_at is None and self.expires_at > datetime.now(timezone.utc)
 
 
 class PasswordReset(Base):
@@ -194,5 +199,5 @@ class PasswordReset(Base):
 
     @property
     def is_valid(self) -> bool:
-        from datetime import UTC
-        return self.used_at is None and self.expires_at > datetime.now(UTC)
+        from datetime import timezone
+        return self.used_at is None and self.expires_at > datetime.now(timezone.utc)

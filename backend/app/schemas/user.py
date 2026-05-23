@@ -58,4 +58,6 @@ class UserMeResponse(AppBaseModel):
 class UpdateProfileRequest(AppBaseModel):
     first_name: str | None = Field(default=None, min_length=1, max_length=100)
     last_name: str | None = Field(default=None, min_length=1, max_length=100)
+    email: EmailStr | None = Field(default=None)
     phone: str | None = Field(default=None, pattern=r"^\+?[1-9]\d{7,14}$")
+    avatar_url: str | None = Field(default=None)

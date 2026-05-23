@@ -12,4 +12,5 @@ from app.models.user import (  # noqa: F401
     User,
     UserRole,
 )
+from app.models.address import Address  # noqa: F401
 from app.models.audit import AuditLog  # noqa: F401

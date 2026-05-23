@@ -95,7 +95,7 @@ async def db_session(test_engine) -> AsyncGenerator[AsyncSession, None]:
         finally:
             await session.rollback()
 
-@pytest_asyncio.fixture(scope="session")
+@pytest_asyncio.fixture
 async def fake_redis_session():
     import fakeredis.aioredis
     # Create the FakeRedis instance in the session loop
@@ -104,12 +104,15 @@ async def fake_redis_session():
     await redis.aclose()
 
 @pytest_asyncio.fixture
-async def client(test_engine) -> AsyncGenerator[AsyncClient, None]:
+async def client(test_engine, fake_redis_session) -> AsyncGenerator[AsyncClient, None]:
     from app.main import create_app
     from unittest.mock import patch
     from contextlib import asynccontextmanager
+    import app.redis
+
+    app.redis._cache_client = fake_redis_session
     
-    app = create_app()
+    app_instance = create_app()
 
     @asynccontextmanager
     async def mock_lifespan(app):
@@ -120,7 +123,7 @@ async def client(test_engine) -> AsyncGenerator[AsyncClient, None]:
 
     with patch('app.main.lifespan', new=mock_lifespan), \
          patch('app.core.middleware.RateLimitMiddleware.dispatch', new=mock_rate_limit):
-        transport = ASGITransport(app=app)
+        transport = ASGITransport(app=app_instance)
         async with AsyncClient(transport=transport, base_url="http://testserver") as c:
             yield c
 
@@ -166,3 +169,17 @@ async def verified_user_tokens(client: AsyncClient, db_session):
         "email": email,
         "password": password
     }
+
+
+@pytest_asyncio.fixture
+async def test_user(db_session: AsyncSession, verified_user_tokens: dict):
+    from sqlalchemy import select
+    from app.models.user import User
+    
+    stmt = select(User).where(User.email == verified_user_tokens["email"])
+    result = await db_session.execute(stmt)
+    return result.scalar_one()
+
+@pytest_asyncio.fixture
+async def auth_headers(verified_user_tokens: dict):
+    return {"Authorization": f"Bearer {verified_user_tokens['access_token']}"}
