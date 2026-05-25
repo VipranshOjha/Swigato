@@ -206,8 +206,9 @@ async def admin_token(client: AsyncClient, db_session: AsyncSession):
     # Assign admin role
     admin_role = (await db_session.execute(select(Role).where(Role.name == "admin"))).scalar_one()
     user = (await db_session.execute(select(User).where(User.email == email))).scalar_one()
-    db_session.add(UserRole(user_id=user.id, role_id=admin_role.id))
-    await db_session.commit()
+    if not any(ur.role_id == admin_role.id for ur in user.user_roles):
+        db_session.add(UserRole(user_id=user.id, role_id=admin_role.id))
+        await db_session.commit()
     
     response = await client.post("/api/v1/auth/login", json={"email": email, "password": password})
     return response.json().get("access_token", "")
@@ -233,8 +234,9 @@ async def restaurant_owner_token(client: AsyncClient, db_session: AsyncSession):
     # Assign restaurant_owner role
     owner_role = (await db_session.execute(select(Role).where(Role.name == "restaurant_owner"))).scalar_one()
     user = (await db_session.execute(select(User).where(User.email == email))).scalar_one()
-    db_session.add(UserRole(user_id=user.id, role_id=owner_role.id))
-    await db_session.commit()
+    if not any(ur.role_id == owner_role.id for ur in user.user_roles):
+        db_session.add(UserRole(user_id=user.id, role_id=owner_role.id))
+        await db_session.commit()
     
     response = await client.post("/api/v1/auth/login", json={"email": email, "password": password})
     return response.json().get("access_token", "")
