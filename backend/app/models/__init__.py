@@ -14,3 +14,12 @@ from app.models.user import (  # noqa: F401
 )
 from app.models.address import Address  # noqa: F401
 from app.models.audit import AuditLog  # noqa: F401
+from app.models.restaurant import (  # noqa: F401
+    ApprovalStatus,
+    DocumentType,
+    OperatingHour,
+    Restaurant,
+    RestaurantCategory,
+    RestaurantDocument,
+    restaurant_category_mapping,
+)

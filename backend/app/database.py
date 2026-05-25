@@ -73,6 +73,9 @@ async def close_db() -> None:
         _engine = None
 
 
+import logging
+logger = logging.getLogger(__name__)
+
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
     """Per-request async DB session. Auto-commits on success, rolls back on error."""
     if _async_session_factory is None:
@@ -80,8 +83,11 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
     async with _async_session_factory() as session:
         try:
             yield session
+            logger.debug("get_session: about to commit session")
             await session.commit()
-        except Exception:
+            logger.debug("get_session: commit successful")
+        except Exception as e:
+            logger.error(f"get_session: exception occurred ({e}), rolling back")
             await session.rollback()
             raise
 

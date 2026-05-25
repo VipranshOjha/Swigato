@@ -73,12 +73,19 @@ class BaseRepository(Generic[ModelT]):
 
         return items, total
 
+    import logging
+    logger = logging.getLogger(__name__)
+
     async def create(self, **kwargs: Any) -> ModelT:
         """Create and persist a new model instance."""
+        self.logger.debug("BaseRepository.create: starting")
         instance = self.model(**kwargs)
         self.session.add(instance)
+        self.logger.debug("BaseRepository.create: calling session.flush()")
         await self.session.flush()  # Get generated ID without committing
+        self.logger.debug("BaseRepository.create: calling session.refresh()")
         await self.session.refresh(instance)
+        self.logger.debug("BaseRepository.create: returning instance")
         return instance
 
     async def update(self, instance: ModelT, **kwargs: Any) -> ModelT:

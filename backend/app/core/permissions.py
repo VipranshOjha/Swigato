@@ -137,3 +137,4 @@ def require_verified_roles(*roles: UserRole):
 AuthUser = Annotated[CurrentUser, Depends(get_current_user)]
 VerifiedUser = Annotated[CurrentUser, Depends(get_current_verified_user)]
 AdminUser = Annotated[CurrentUser, Depends(require_roles(UserRole.ADMIN, UserRole.SUPER_ADMIN))]
+OwnerUser = Annotated[CurrentUser, Depends(require_roles(UserRole.RESTAURANT_OWNER))]

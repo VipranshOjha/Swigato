@@ -1,6 +1,7 @@
 import { register, isAuthenticated } from './auth.js';
 import { showToast } from './toast.js';
 
+// Redirect if already logged in
 if (isAuthenticated()) {
     window.location.href = '/index.html';
 }
@@ -17,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        if (!termsInput.checked) {
+        if (termsInput && !termsInput.checked) {
             showToast('You must agree to the terms', 'error');
             return;
         }
@@ -27,12 +28,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const first_name = parts[0];
         const last_name = parts.length > 1 ? parts.slice(1).join(' ') : '';
 
+        if (!first_name) {
+            showToast('Please enter your full name', 'error');
+            return;
+        }
+
         const userData = {
             first_name,
             last_name,
             email: emailInput.value.trim(),
             password: passwordInput.value,
-            phone_number: phoneInput.value.trim()
+            phone: phoneInput.value.trim() || undefined,
         };
 
         const originalBtnHtml = submitBtn.innerHTML;
@@ -47,25 +53,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             await register(userData);
-            showToast('Account created successfully! Redirecting...', 'success');
-            setTimeout(() => {
-                window.location.href = '/login.html';
-            }, 1500);
+            showToast('Account created! Please log in.', 'success');
+            setTimeout(() => { window.location.href = '/login.html'; }, 1500);
         } catch (error) {
             console.error('Registration error', error);
             let errorMsg = 'Registration failed. Please try again.';
-            if (error.response?.data?.detail) {
-                if (typeof error.response.data.detail === 'string') {
-                    errorMsg = error.response.data.detail;
-                } else if (Array.isArray(error.response.data.detail)) {
-                    errorMsg = error.response.data.detail.map(e => e.msg).join(', ');
-                } else if (error.response.data.error?.message) {
-                    errorMsg = error.response.data.error.message;
-                }
-            } else if (error.response?.data?.error?.message) {
-                 errorMsg = error.response.data.error.message;
+            const errData = error.response?.data;
+            if (errData?.detail) {
+                errorMsg = typeof errData.detail === 'string'
+                    ? errData.detail
+                    : Array.isArray(errData.detail)
+                        ? errData.detail.map(e => e.msg).join(', ')
+                        : errData.error?.message || errorMsg;
+            } else if (errData?.error?.message) {
+                errorMsg = errData.error.message;
             }
-
             showToast(errorMsg, 'error');
             submitBtn.disabled = false;
             submitBtn.innerHTML = originalBtnHtml;

@@ -14,6 +14,12 @@ export default defineConfig({
         verifyEmail: resolve(__dirname, 'verify-email.html'),
         profileSettings: resolve(__dirname, 'profile-settings.html'),
         addressManagement: resolve(__dirname, 'address-management.html'),
+        restaurants: resolve(__dirname, 'restaurants.html'),
+        restaurant: resolve(__dirname, 'restaurant.html'),
+        adminDashboard: resolve(__dirname, 'admin-dashboard.html'),
+        restaurantOnboarding: resolve(__dirname, 'restaurant-onboarding.html'),
+        ownerDashboard: resolve(__dirname, 'owner-dashboard.html'),
+        ownerRestaurantDetail: resolve(__dirname, 'owner-restaurant-detail.html'),
       }
     }
   }

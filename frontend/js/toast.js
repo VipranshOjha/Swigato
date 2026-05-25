@@ -1,48 +1,67 @@
+/**
+ * toast.js — Simple toast notification utility.
+ * Works with both the custom Kinetic Zest theme and the plain Tailwind CDN theme.
+ */
 export const showToast = (message, type = 'success') => {
     // Remove existing toast if any
     const existingToast = document.getElementById('swigato-toast');
-    if (existingToast) {
-        existingToast.remove();
-    }
+    if (existingToast) existingToast.remove();
 
     const toast = document.createElement('div');
     toast.id = 'swigato-toast';
-    
-    // Base classes
-    toast.className = 'fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg font-body-md text-white flex items-center gap-2 transform transition-all duration-300 translate-y-[-100%] opacity-0';
-    
-    // Type classes
-    if (type === 'error') {
-        toast.classList.add('bg-status-error');
-    } else if (type === 'success') {
-        toast.classList.add('bg-status-success');
-    } else {
-        toast.classList.add('bg-primary-container');
-    }
 
-    // Icon
-    const icon = document.createElement('span');
-    icon.className = 'material-symbols-outlined text-[20px]';
-    icon.textContent = type === 'error' ? 'error' : 'check_circle';
-    
-    const text = document.createElement('span');
-    text.textContent = message;
+    // Color based on type — uses hex values to work with ANY CSS theme
+    const colorMap = {
+        success: '#16a34a',  // green-600
+        error: '#dc2626',    // red-600
+        info: '#2563eb',     // blue-600
+        warning: '#d97706',  // amber-600
+    };
+    const bgColor = colorMap[type] || colorMap.info;
 
-    toast.appendChild(icon);
-    toast.appendChild(text);
+    toast.style.cssText = `
+        position: fixed;
+        top: 1.25rem;
+        right: 1.25rem;
+        z-index: 9999;
+        padding: 0.75rem 1.25rem;
+        border-radius: 0.625rem;
+        background: ${bgColor};
+        color: white;
+        font-size: 0.875rem;
+        font-weight: 500;
+        font-family: inherit;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        max-width: 24rem;
+        transform: translateY(-110%);
+        opacity: 0;
+        transition: transform 0.25s ease, opacity 0.25s ease;
+    `;
+
+    const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : type === 'warning' ? '⚠' : 'ℹ';
+    toast.innerHTML = `<span style="font-weight:700;font-size:1rem;">${icon}</span> <span>${message}</span>`;
 
     document.body.appendChild(toast);
 
     // Animate in
-    setTimeout(() => {
-        toast.classList.remove('translate-y-[-100%]', 'opacity-0');
-        toast.classList.add('translate-y-0', 'opacity-100');
-    }, 10);
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            toast.style.transform = 'translateY(0)';
+            toast.style.opacity = '1';
+        });
+    });
 
-    // Animate out and remove
+    // Auto-dismiss after 3.5s
     setTimeout(() => {
-        toast.classList.remove('translate-y-0', 'opacity-100');
-        toast.classList.add('translate-y-[-100%]', 'opacity-0');
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
+        toast.style.transform = 'translateY(-110%)';
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 280);
+    }, 3500);
 };
+
+// Also export showError / showSuccess helpers for convenience
+export const showError = (msg) => showToast(msg, 'error');
+export const showSuccess = (msg) => showToast(msg, 'success');

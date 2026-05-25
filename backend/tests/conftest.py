@@ -183,3 +183,59 @@ async def test_user(db_session: AsyncSession, verified_user_tokens: dict):
 @pytest_asyncio.fixture
 async def auth_headers(verified_user_tokens: dict):
     return {"Authorization": f"Bearer {verified_user_tokens['access_token']}"}
+
+
+@pytest_asyncio.fixture
+async def admin_token(client: AsyncClient, db_session: AsyncSession):
+    email = "admin@swigato.com"
+    password = "AdminPassword1!"
+    await client.post("/api/v1/auth/register", json={
+        "first_name": "Admin",
+        "last_name": "User",
+        "email": email,
+        "password": password,
+    })
+    
+    from sqlalchemy import update, select
+    from app.models.user import User, Role, UserRole
+    
+    # Verify user
+    await db_session.execute(
+        update(User).where(User.email == email).values(is_email_verified=True)
+    )
+    # Assign admin role
+    admin_role = (await db_session.execute(select(Role).where(Role.name == "admin"))).scalar_one()
+    user = (await db_session.execute(select(User).where(User.email == email))).scalar_one()
+    db_session.add(UserRole(user_id=user.id, role_id=admin_role.id))
+    await db_session.commit()
+    
+    response = await client.post("/api/v1/auth/login", json={"email": email, "password": password})
+    return response.json().get("access_token", "")
+
+@pytest_asyncio.fixture
+async def restaurant_owner_token(client: AsyncClient, db_session: AsyncSession):
+    email = "owner@swigato.com"
+    password = "OwnerPassword1!"
+    await client.post("/api/v1/auth/register", json={
+        "first_name": "Owner",
+        "last_name": "User",
+        "email": email,
+        "password": password,
+    })
+    
+    from sqlalchemy import update, select
+    from app.models.user import User, Role, UserRole
+    
+    # Verify user
+    await db_session.execute(
+        update(User).where(User.email == email).values(is_email_verified=True)
+    )
+    # Assign restaurant_owner role
+    owner_role = (await db_session.execute(select(Role).where(Role.name == "restaurant_owner"))).scalar_one()
+    user = (await db_session.execute(select(User).where(User.email == email))).scalar_one()
+    db_session.add(UserRole(user_id=user.id, role_id=owner_role.id))
+    await db_session.commit()
+    
+    response = await client.post("/api/v1/auth/login", json={"email": email, "password": password})
+    return response.json().get("access_token", "")
+

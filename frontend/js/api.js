@@ -1,109 +1,136 @@
 import axios from 'axios';
-import { getAccessToken, getRefreshToken, setTokens, clearTokens } from './auth.js';
+import { getAccessToken, setTokens, clearTokens } from './auth.js';
 
-// Base API URL from environment variables
+// ── Base Configuration ────────────────────────────────────────────────────────
 export const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
-// Create the axios instance
+// ── Axios Instance ────────────────────────────────────────────────────────────
 export const api = axios.create({
     baseURL: API_URL,
-    headers: {
-        'Content-Type': 'application/json'
-    }
+    headers: { 'Content-Type': 'application/json' },
+    withCredentials: true,  // Send cookies (refresh token cookie)
 });
 
-// Request Interceptor: Attach Access Token
+// ── Request Interceptor: Attach Bearer Token ──────────────────────────────────
 api.interceptors.request.use((config) => {
     const token = getAccessToken();
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
-}, (error) => {
-    return Promise.reject(error);
-});
+}, (error) => Promise.reject(error));
 
-// Response Interceptor: Handle 401s and Refresh Token
+// ── Response Interceptor: Handle 401 + Token Refresh ─────────────────────────
 let isRefreshing = false;
 let failedQueue = [];
 
 const processQueue = (error, token = null) => {
     failedQueue.forEach(prom => {
-        if (error) {
-            prom.reject(error);
-        } else {
-            prom.resolve(token);
-        }
+        error ? prom.reject(error) : prom.resolve(token);
     });
     failedQueue = [];
 };
 
-api.interceptors.response.use((response) => {
-    return response;
-}, async (error) => {
-    const originalRequest = error.config;
+api.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+        const originalRequest = error.config;
 
-    // If error is 401 and we haven't already retried
-    if (error.response?.status === 401 && !originalRequest._retry) {
-        // If the refresh token endpoint itself fails with 401, don't loop
-        if (originalRequest.url.includes('/api/v1/auth/refresh')) {
-            clearTokens();
-            window.location.href = '/login.html';
-            return Promise.reject(error);
-        }
+        if (error.response?.status === 401 && !originalRequest._retry) {
+            // Don't loop on the refresh endpoint itself
+            if (originalRequest.url?.includes('/api/v1/auth/refresh')) {
+                clearTokens();
+                window.location.href = '/login.html';
+                return Promise.reject(error);
+            }
 
-        if (isRefreshing) {
-            return new Promise(function(resolve, reject) {
-                failedQueue.push({ resolve, reject });
-            }).then(token => {
-                originalRequest.headers['Authorization'] = 'Bearer ' + token;
+            if (isRefreshing) {
+                return new Promise((resolve, reject) => {
+                    failedQueue.push({ resolve, reject });
+                }).then(token => {
+                    originalRequest.headers['Authorization'] = 'Bearer ' + token;
+                    return api(originalRequest);
+                });
+            }
+
+            originalRequest._retry = true;
+            isRefreshing = true;
+
+            try {
+                // Backend expects the refresh token in an HttpOnly cookie sent via withCredentials
+                const response = await axios.post(`${API_URL}/api/v1/auth/refresh`, {}, { withCredentials: true });
+
+                const newAccessToken = response.data.access_token;
+                setTokens(newAccessToken);
+
+                api.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
+                originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
+                processQueue(null, newAccessToken);
                 return api(originalRequest);
-            }).catch(err => {
-                return Promise.reject(err);
-            });
+            } catch (refreshError) {
+                processQueue(refreshError, null);
+                clearTokens();
+                window.location.href = '/login.html';
+                return Promise.reject(refreshError);
+            } finally {
+                isRefreshing = false;
+            }
         }
 
-        originalRequest._retry = true;
-        isRefreshing = true;
-
-        const refreshToken = getRefreshToken();
-        if (!refreshToken) {
-            clearTokens();
-            window.location.href = '/login.html';
-            return Promise.reject(error);
-        }
-
-        try {
-            // Attempt to refresh
-            const response = await axios.post(`${API_URL}/api/v1/auth/refresh`, {
-                refresh_token: refreshToken
-            });
-            
-            const newAccessToken = response.data.access_token;
-            // The backend might return a new refresh token as a cookie, or in the body.
-            // Our backend returns it as an HttpOnly cookie currently, but wait!
-            // Looking at the implementation, Swigato returns refresh_token in a cookie AND/OR requires it to be sent in JSON.
-            // Wait, in `test_auth_api.py`, we test: `client.post("/api/v1/auth/refresh", json={"refresh_token": ...})`
-            // So we explicitly send it.
-            
-            setTokens(newAccessToken, refreshToken);
-            
-            api.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
-            originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
-            
-            processQueue(null, newAccessToken);
-            
-            return api(originalRequest);
-        } catch (refreshError) {
-            processQueue(refreshError, null);
-            clearTokens();
-            // Redirect to login
-            window.location.href = '/login.html';
-            return Promise.reject(refreshError);
-        } finally {
-            isRefreshing = false;
-        }
+        return Promise.reject(error);
     }
+);
 
-    return Promise.reject(error);
-});
+// ── apiFetch: fetch-compatible helper wrapping axios ─────────────────────────
+// Used by scripts that prefer the fetch-style interface.
+export const apiFetch = async (url, options = {}) => {
+    const method = (options.method || 'GET').toLowerCase();
+    const body = options.body ? JSON.parse(options.body) : undefined;
+
+    const response = await api[method](url, body);
+    return response.data;
+};
+
+// ── Grouped API Services ──────────────────────────────────────────────────────
+
+export const authApi = {
+    login: (email, password) => api.post('/api/v1/auth/login', { email, password }),
+    register: (data) => api.post('/api/v1/auth/register', data),
+    logout: () => api.post('/api/v1/auth/logout'),
+    refresh: (refresh_token) => api.post('/api/v1/auth/refresh', { refresh_token }),
+    forgotPassword: (email) => api.post('/api/v1/auth/forgot-password', { email }),
+    resetPassword: (data) => api.post('/api/v1/auth/reset-password', data),
+    changePassword: (data) => api.post('/api/v1/auth/change-password', data),
+};
+
+export const userApi = {
+    me: () => api.get('/api/v1/users/me'),
+    updateMe: (data) => api.patch('/api/v1/users/me', data),
+    deleteMe: () => api.delete('/api/v1/users/me'),
+    myRoles: () => api.get('/api/v1/users/me/roles'),
+    addresses: () => api.get('/api/v1/users/me/addresses'),
+    createAddress: (data) => api.post('/api/v1/users/me/addresses', data),
+    updateAddress: (id, data) => api.put(`/api/v1/users/me/addresses/${id}`, data),
+    deleteAddress: (id) => api.delete(`/api/v1/users/me/addresses/${id}`),
+    setDefaultAddress: (id) => api.patch(`/api/v1/users/me/addresses/${id}/default`),
+};
+
+export const ownerApi = {
+    list: () => api.get('/api/v1/owner/restaurants/'),
+    create: (data) => api.post('/api/v1/owner/restaurants/', data),
+    get: (id) => api.get(`/api/v1/owner/restaurants/${id}`),
+    update: (id, data) => api.put(`/api/v1/owner/restaurants/${id}`, data),
+    submit: (id) => api.post(`/api/v1/owner/restaurants/${id}/submit`),
+};
+
+export const adminApi = {
+    list: (params) => api.get('/api/v1/admin/restaurants/', { params }),
+    approve: (id) => api.patch(`/api/v1/admin/restaurants/${id}/approve`),
+    reject: (id, data) => api.patch(`/api/v1/admin/restaurants/${id}/reject`, data),
+    suspend: (id) => api.patch(`/api/v1/admin/restaurants/${id}/suspend`),
+};
+
+export const restaurantApi = {
+    list: (params) => api.get('/api/v1/restaurants/', { params }),
+    get: (slug) => api.get(`/api/v1/restaurants/${slug}`),
+};
