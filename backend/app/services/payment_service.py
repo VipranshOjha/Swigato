@@ -9,7 +9,7 @@ from typing import Any
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.constants import OrderStatus, PaymentGateway, PaymentStatus, RefundStatus
+from app.constants import OrderStatus, PaymentGateway, PaymentStatus, RefundStatus
 from app.core.exceptions import SwigatoException, InvalidWebhookSignatureError
 from app.repositories.order_repo import OrderRepository
 from app.repositories.payment_repo import (
@@ -18,8 +18,8 @@ from app.repositories.payment_repo import (
     RefundRepository,
 )
 from app.services.order_service import OrderService
-from app.services.payment_gateways.base import PaymentGatewayProvider
-from app.services.payment_gateways.mock_gateway import MockPaymentGateway
+from app.integrations.payment.base import PaymentGatewayProvider
+from app.integrations.payment.mock_gateway import MockPaymentGateway
 from app.schemas.payment import (
     PaymentDetailResponse,
     PaymentInitializeRequest,

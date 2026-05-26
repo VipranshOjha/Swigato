@@ -19,7 +19,7 @@ from datetime import UTC, datetime, timedelta
 import structlog
 
 from app import config
-from app.core.constants import AuditAction, UserRole
+from app.constants import AuditAction, UserRole
 from app.core.exceptions import (
     EmailAlreadyExistsError,
     EmailNotVerifiedError,

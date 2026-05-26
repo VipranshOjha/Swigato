@@ -3,10 +3,10 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.user import User
 from app.models.restaurant import Restaurant, ApprovalStatus
-from app.core.constants import UserRole
+from app.constants import UserRole
 from app.services.auth_service import AuthService
 from app.repositories.user_repo import UserRepository
-from app.core.permissions import require_roles, CurrentUser
+from app.dependencies.auth import require_roles, CurrentUser
 from app.core.exceptions import PermissionDeniedError
 import uuid
 

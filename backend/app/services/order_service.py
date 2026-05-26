@@ -10,7 +10,7 @@ from typing import Sequence
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.constants import ORDER_TRANSITIONS, OrderStatus, UserRole
+from app.constants import ORDER_TRANSITIONS, OrderStatus, UserRole
 from app.core.exceptions import (
     InvalidOrderStateTransitionError,
     OrderNotFoundError,

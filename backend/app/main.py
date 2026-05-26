@@ -37,7 +37,7 @@ logger = structlog.get_logger(__name__)
 
 async def _seed_roles() -> None:
     """Ensure all system roles exist. Idempotent — safe every startup."""
-    from app.core.constants import UserRole
+    from app.constants import UserRole
     from app.database import _async_session_factory
     from app.models.user import Role
     from sqlalchemy import select

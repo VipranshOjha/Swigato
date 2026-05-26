@@ -4,7 +4,7 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 
-from app.core.constants import OrderStatus, PaymentGateway, PaymentStatus
+from app.constants import OrderStatus, PaymentGateway, PaymentStatus
 from app.models.order import Order
 from app.models.payment import Payment
 from app.models.restaurant import Restaurant

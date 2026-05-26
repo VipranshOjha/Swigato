@@ -11,7 +11,7 @@ from typing import Any, Optional
 
 from pydantic import Field
 
-from app.core.constants import PaymentGateway, PaymentStatus, RefundStatus
+from app.constants import PaymentGateway, PaymentStatus, RefundStatus
 from app.schemas.common import AppBaseModel
 
 
