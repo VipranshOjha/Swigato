@@ -44,7 +44,11 @@ class RestaurantRepository(BaseRepository[Restaurant]):
         stmt = (
             select(Restaurant)
             .where(Restaurant.owner_id == owner_id, Restaurant.deleted_at.is_(None))
-            .options(selectinload(Restaurant.categories))
+            .options(
+                selectinload(Restaurant.categories),
+                selectinload(Restaurant.operating_hours),
+                selectinload(Restaurant.documents)
+            )
             .order_by(desc(Restaurant.created_at))
         )
         result = await self.session.execute(stmt)
@@ -115,7 +119,11 @@ class RestaurantRepository(BaseRepository[Restaurant]):
         offset: int = 0
     ) -> Sequence[Restaurant]:
         """Admin query to list restaurants with optional status filter."""
-        stmt = select(Restaurant).options(selectinload(Restaurant.categories))
+        stmt = select(Restaurant).options(
+            selectinload(Restaurant.categories),
+            selectinload(Restaurant.operating_hours),
+            selectinload(Restaurant.documents)
+        )
         if status:
             stmt = stmt.where(Restaurant.approval_status == status)
         stmt = stmt.order_by(desc(Restaurant.created_at)).offset(offset).limit(limit)

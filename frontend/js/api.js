@@ -11,6 +11,33 @@ export const api = axios.create({
     withCredentials: true,  // Send cookies (refresh token cookie)
 });
 
+// ── Menu API ──────────────────────────────────────────────────────────────────
+export const menuApi = {
+    // Owner endpoints
+    createCategory: (restaurantId, payload) => api.post(`/api/v1/owner/restaurants/${restaurantId}/categories`, payload),
+    getCategories: (restaurantId) => api.get(`/api/v1/owner/restaurants/${restaurantId}/categories`),
+    updateCategory: (restaurantId, categoryId, payload) => api.put(`/api/v1/owner/restaurants/${restaurantId}/categories/${categoryId}`, payload),
+    deleteCategory: (restaurantId, categoryId) => api.delete(`/api/v1/owner/restaurants/${restaurantId}/categories/${categoryId}`),
+
+    createItem: (restaurantId, payload) => api.post(`/api/v1/owner/restaurants/${restaurantId}/items`, payload),
+    getItems: (restaurantId) => api.get(`/api/v1/owner/restaurants/${restaurantId}/items`),
+    updateItem: (restaurantId, itemId, payload) => api.put(`/api/v1/owner/restaurants/${restaurantId}/items/${itemId}`, payload),
+    toggleItemAvailability: (restaurantId, itemId, isAvailable) => api.patch(`/api/v1/owner/restaurants/${restaurantId}/items/${itemId}/availability`, { is_available: isAvailable }),
+    deleteItem: (restaurantId, itemId) => api.delete(`/api/v1/owner/restaurants/${restaurantId}/items/${itemId}`),
+
+    // Public endpoints
+    getPublicMenu: (restaurantId) => api.get(`/api/v1/restaurants/${restaurantId}/menu`),
+};
+
+// ── Cart API ──────────────────────────────────────────────────────────────────
+export const cartApi = {
+    getCart: () => api.get('/api/v1/cart'),
+    addItem: (menuItemId, quantity) => api.post('/api/v1/cart/items', { menu_item_id: menuItemId, quantity }),
+    updateItemQuantity: (menuItemId, quantity) => api.patch(`/api/v1/cart/items/${menuItemId}`, { quantity }),
+    removeItem: (menuItemId) => api.delete(`/api/v1/cart/items/${menuItemId}`),
+    clearCart: () => api.delete('/api/v1/cart'),
+};
+
 // ── Request Interceptor: Attach Bearer Token ──────────────────────────────────
 api.interceptors.request.use((config) => {
     const token = getAccessToken();
@@ -128,6 +155,7 @@ export const adminApi = {
     approve: (id) => api.patch(`/api/v1/admin/restaurants/${id}/approve`),
     reject: (id, data) => api.patch(`/api/v1/admin/restaurants/${id}/reject`, data),
     suspend: (id) => api.patch(`/api/v1/admin/restaurants/${id}/suspend`),
+    activate: (id) => api.patch(`/api/v1/admin/restaurants/${id}/activate`),
 };
 
 export const restaurantApi = {

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Swigato - Empty Cart</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-tertiary-fixed": "#032100",
+                    "on-secondary-container": "#5e6177",
+                    "outline-variant": "#dec1b0",
+                    "on-error": "#ffffff",
+                    "surface-dark": "#171A29",
+                    "on-error-container": "#93000a",
+                    "status-warning": "#DB7C38",
+                    "tertiary-fixed-dim": "#86db69",
+                    "surface-variant": "#e1e2ed",
+                    "on-background": "#191b23",
+                    "surface-container": "#ecedf8",
+                    "primary-container": "#fc8019",
+                    "surface-container-lowest": "#ffffff",
+                    "primary": "#984800",
+                    "outline": "#8b7264",
+                    "tertiary": "#1b6d01",
+                    "surface-bright": "#faf9ff",
+                    "secondary-fixed-dim": "#c2c5de",
+                    "on-tertiary-container": "#0c4200",
+                    "primary-fixed-dim": "#ffb689",
+                    "on-secondary-fixed": "#161b2d",
+                    "surface-background": "#FFFFFF",
+                    "on-primary-fixed": "#311300",
+                    "surface-container-low": "#f2f3fe",
+                    "on-primary-container": "#5e2a00",
+                    "secondary-fixed": "#dee1fa",
+                    "inverse-surface": "#2d3038",
+                    "inverse-on-surface": "#eff0fb",
+                    "primary-fixed": "#ffdbc8",
+                    "on-surface-variant": "#574236",
+                    "status-success": "#60B246",
+                    "on-surface": "#191b23",
+                    "on-primary": "#ffffff",
+                    "on-secondary-fixed-variant": "#42465a",
+                    "tertiary-container": "#63b549",
+                    "error": "#ba1a1a",
+                    "surface-container-highest": "#e1e2ed",
+                    "surface": "#faf9ff",
+                    "on-tertiary-fixed-variant": "#115300",
+                    "error-container": "#ffdad6",
+                    "surface-dim": "#d8d9e4",
+                    "surface-container-high": "#e6e7f2",
+                    "secondary": "#5a5d73",
+                    "background": "#faf9ff",
+                    "tertiary-fixed": "#a1f882",
+                    "on-secondary": "#ffffff",
+                    "secondary-container": "#dbdef8",
+                    "status-error": "#E13D45",
+                    "surface-tint": "#984800",
+                    "on-tertiary": "#ffffff",
+                    "on-primary-fixed-variant": "#733500",
+                    "inverse-primary": "#ffb689"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "gutter": "16px",
+                    "base": "8px",
+                    "section-gap": "32px",
+                    "container-margin": "16px",
+                    "card-padding": "12px"
+            },
+            "fontFamily": {
+                    "headline-xl": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "price-display": ["Inter"],
+                    "label-bold": ["Inter"],
+                    "body-sm": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "headline-md": ["Inter"],
+                    "body-md": ["Inter"],
+                    "headline-lg-mobile": ["Inter"]
+            },
+            "fontSize": {
+                    "headline-xl": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                    "headline-lg": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "price-display": ["16px", {"lineHeight": "20px", "fontWeight": "600"}],
+                    "label-bold": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "headline-md": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                    "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-lg-mobile": ["20px", {"lineHeight": "28px", "fontWeight": "700"}]
+            }
+          }
+        }
+      }
+    </script>
+</head>
+<body class="bg-surface text-on-surface font-body-md flex flex-col min-h-screen">
+<!-- TopNavBar -->
+<header class="shadow-sm bg-surface dark:bg-surface-dark docked full-width top-0 sticky z-50">
+<div class="flex justify-between items-center w-full px-container-margin py-4 max-w-7xl mx-auto">
+<div class="flex items-center gap-4">
+<a class="font-headline-lg text-headline-lg-mobile md:text-headline-lg font-black text-primary-container dark:text-primary-container tracking-tight" href="#">Swigato</a>
+<button class="hidden md:flex items-center gap-1 text-on-surface-variant hover:text-primary transition-colors text-label-bold font-label-bold">
+                    Set Location
+                    <span class="material-symbols-outlined text-[16px]">expand_more</span>
+</button>
+</div>
+<!-- Navigation Links (Desktop) -->
+<nav class="hidden md:flex items-center gap-8">
+<a class="text-on-surface-variant dark:text-on-surface hover:text-primary transition-colors hover:bg-surface-container-low dark:hover:bg-surface-container-high transition-all p-2 rounded-lg font-headline-md text-headline-md flex items-center gap-2" href="#">
+<span class="material-symbols-outlined">local_offer</span>
+                    Offers
+                </a>
+<a class="text-on-surface-variant dark:text-on-surface hover:text-primary transition-colors hover:bg-surface-container-low dark:hover:bg-surface-container-high transition-all p-2 rounded-lg font-headline-md text-headline-md flex items-center gap-2" href="#">
+<span class="material-symbols-outlined">help</span>
+                    Help
+                </a>
+<a class="text-on-surface-variant dark:text-on-surface hover:text-primary transition-colors hover:bg-surface-container-low dark:hover:bg-surface-container-high transition-all p-2 rounded-lg font-headline-md text-headline-md flex items-center gap-2" href="#">
+<span class="material-symbols-outlined">person</span>
+                    Sign In
+                </a>
+<a class="text-primary dark:text-primary-container border-b-2 border-primary pb-1 hover:bg-surface-container-low dark:hover:bg-surface-container-high transition-all p-2 rounded-lg font-headline-md text-headline-md flex items-center gap-2 scale-95 active:opacity-80 transition-transform" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">shopping_cart</span>
+                    Cart
+                </a>
+</nav>
+<!-- Mobile Trailing Icons -->
+<div class="flex md:hidden items-center gap-4 text-primary dark:text-primary-container">
+<button class="scale-95 active:opacity-80 transition-transform hover:bg-surface-container-low rounded-full p-2">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Content: Empty Cart -->
+<main class="flex-grow flex items-center justify-center py-section-gap px-container-margin">
+<div class="max-w-md w-full flex flex-col items-center text-center space-y-6">
+<!-- Illustration Placeholder -->
+<div class="w-64 h-64 md:w-80 md:h-80 relative rounded-full bg-surface-container-low flex items-center justify-center overflow-hidden shadow-sm">
+<img alt="Empty cart illustration" class="absolute inset-0 w-full h-full object-cover opacity-80 mix-blend-multiply" data-alt="A highly detailed 3D illustration of an empty shopping cart or delivery bag floating gently in a clean, minimalist studio setting. The lighting is soft and bright, creating a cheerful, modern aesthetic suitable for a premium food delivery app. The primary color palette features crisp whites and subtle light grays, with a vibrant pop of energetic orange (#FC8019) highlighting the handle or a small detail. The mood is lighthearted and inviting, encouraging the viewer to start shopping." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQ3B9Yrt36gvynZ_rYnNjcWjlgKD8c4aapUToIWRLkf4K4xQkpkB4WW664e2qF6vuD0ijqKkoNFug99oa0xlXPXKp8XQMcu3zC99xjK9bsEEk3uJO1wqDg6OSA2vXzu09dLBfGX6w5i05J_DwsPwtSQ4yhQHnQpe4rBCDWNCSXz9gj1DTSPc6JFBtdnhA3YjRr4-St5S-Z--W4mFvaCd3C4lc5qtx_-QNZuwObodMfJ4nRvSkwyifS22L7XVIS3WlfuSxw6XZeBA8"/>
+</div>
+<!-- Text Content -->
+<div class="space-y-2">
+<h1 class="font-headline-lg text-headline-lg md:font-headline-xl md:text-headline-xl text-on-surface">Your cart is empty</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-sm mx-auto">Looks like you haven't added anything yet. Explore top restaurants near you to fill it up!</p>
+</div>
+<!-- CTA Button -->
+<button class="bg-primary-container text-white font-headline-md text-headline-md py-3 px-8 rounded-lg shadow-sm hover:shadow-md hover:opacity-90 active:scale-95 transition-all mt-4 w-full md:w-auto">
+                Browse Restaurants
+            </button>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-dark dark:bg-inverse-surface text-on-primary-fixed dark:text-primary-fixed full-width flat mt-auto">
+<div class="grid grid-cols-2 md:grid-cols-4 gap-section-gap px-container-margin py-12 max-w-7xl mx-auto">
+<!-- Brand Column -->
+<div class="col-span-2 md:col-span-1 flex flex-col gap-4">
+<span class="font-headline-xl text-headline-xl text-surface-container-lowest">Swigato</span>
+<p class="font-body-md text-body-md text-surface-dim opacity-90 hover:opacity-100 transition-opacity">© 2024 Swigato Limited. All rights reserved.</p>
+</div>
+<!-- Links Column 1 -->
+<div class="flex flex-col gap-2">
+<h3 class="font-label-bold text-label-bold text-surface-container-lowest uppercase tracking-wider mb-2">Company</h3>
+<a class="font-body-md text-body-md text-surface-dim hover:text-primary-container transition-colors hover:underline" href="#">About Us</a>
+<a class="font-body-md text-body-md text-surface-dim hover:text-primary-container transition-colors hover:underline" href="#">Careers</a>
+<a class="font-body-md text-body-md text-surface-dim hover:text-primary-container transition-colors hover:underline" href="#">Team</a>
+</div>
+<!-- Links Column 2 -->
+<div class="flex flex-col gap-2">
+<h3 class="font-label-bold text-label-bold text-surface-container-lowest uppercase tracking-wider mb-2">Services</h3>
+<a class="font-body-md text-body-md text-surface-dim hover:text-primary-container transition-colors hover:underline" href="#">Swigato One</a>
+<a class="font-body-md text-body-md text-surface-dim hover:text-primary-container transition-colors hover:underline" href="#">Swigato Instamart</a>
+<a class="font-body-md text-body-md text-surface-dim hover:text-primary-container transition-colors hover:underline" href="#">Swigato Genie</a>
+</div>
+</div>
+</footer>
+<!-- BottomNavBar (Mobile Only) - Suppressed because this is a cart view, not a top-level destination, but following strict instruction to include if considered a main tab. In Swigato JSON, Cart is top nav. Bottom nav is Explore, Search, Offers, Account. Suppressing bottom nav to avoid conflict and prioritize the empty state canvas as requested by 'Empty Cart state' intent, focusing on the CTA. -->
+</body></html>

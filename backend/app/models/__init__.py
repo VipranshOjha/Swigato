@@ -23,3 +23,11 @@ from app.models.restaurant import (  # noqa: F401
     RestaurantDocument,
     restaurant_category_mapping,
 )
+from app.models.menu import (  # noqa: F401
+    MenuCategory,
+    MenuItem,
+)
+from app.models.cart import (  # noqa: F401
+    Cart,
+    CartItem,
+)

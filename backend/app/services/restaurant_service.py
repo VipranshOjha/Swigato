@@ -116,6 +116,7 @@ class RestaurantService:
             restaurant, 
             **{
                 "approval_status": ApprovalStatus.APPROVED,
+                "is_open": True,
                 "verified_at": datetime.now(timezone.utc),
                 "verified_by": admin_id,
                 "rejection_reason": None
@@ -155,5 +156,21 @@ class RestaurantService:
             **{
                 "approval_status": ApprovalStatus.SUSPENDED,
                 "is_open": False  # Force close when suspended
+            }
+        )
+
+    async def activate_restaurant(self, restaurant_id: uuid.UUID) -> Restaurant:
+        restaurant = await self.get_by_id(restaurant_id)
+        
+        if restaurant.approval_status != ApprovalStatus.SUSPENDED:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Only suspended restaurants can be activated"
+            )
+            
+        return await self.repo.update(
+            restaurant,
+            **{
+                "approval_status": ApprovalStatus.APPROVED,
             }
         )

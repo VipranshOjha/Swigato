@@ -123,6 +123,12 @@ class Restaurant(Base, TimestampMixin, SoftDeleteMixin):
     documents: Mapped[List["RestaurantDocument"]] = relationship(
         "RestaurantDocument", back_populates="restaurant", cascade="all, delete-orphan"
     )
+    menu_categories: Mapped[List["MenuCategory"]] = relationship(
+        "MenuCategory", back_populates="restaurant", cascade="all, delete-orphan", order_by="MenuCategory.display_order"
+    )
+    menu_items: Mapped[List["MenuItem"]] = relationship(
+        "MenuItem", back_populates="restaurant", cascade="all, delete-orphan"
+    )
 
 
 class OperatingHour(Base, TimestampMixin):

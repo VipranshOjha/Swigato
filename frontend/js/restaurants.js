@@ -1,80 +1,98 @@
 import { restaurantApi } from './api.js';
 import { isAuthenticated, logout } from './auth.js';
+import { showToast } from './toast.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // ── Auth UI ───────────────────────────────────────────────────────────
+    // Coming soon logic
+    document.querySelectorAll('.coming-soon').forEach(el => {
+        el.addEventListener('click', (e) => {
+            e.preventDefault();
+            const msg = el.getAttribute('data-message') || 'Coming soon';
+            showToast(msg, 'info');
+        });
+    });
+    // Auth UI
     const authSection = document.getElementById('authSection');
     if (authSection) {
         if (isAuthenticated()) {
             authSection.innerHTML = `
-                <a href="/profile-settings.html" class="font-medium text-gray-600 hover:text-orange-600">Profile</a>
-                <button id="logoutBtn" class="font-medium text-gray-600 hover:text-orange-600 ml-4">Logout</button>
+                <a class="text-on-surface-variant hover:text-primary transition-colors font-label-bold text-label-bold px-2 py-1 flex items-center gap-1" href="/profile-settings.html"><span class="material-symbols-outlined text-sm">person</span> Profile</a>
+                <a class="text-on-surface-variant hover:text-primary transition-colors font-label-bold text-label-bold px-2 py-1 flex items-center gap-1" href="/cart.html"><span class="material-symbols-outlined text-sm">shopping_cart</span> Cart</a>
+                <button id="logoutBtn" class="text-on-surface-variant hover:text-primary transition-colors font-label-bold text-label-bold px-2 py-1 flex items-center gap-1"><span class="material-symbols-outlined text-sm">logout</span> Logout</button>
             `;
-            document.getElementById('logoutBtn')?.addEventListener('click', () => logout());
-        } else {
-            authSection.innerHTML = `<a href="/login.html" class="font-medium text-orange-600 hover:text-orange-700">Login</a>`;
+            document.getElementById('logoutBtn')?.addEventListener('click', () => {
+                logout();
+                window.location.reload();
+            });
         }
     }
 
     const searchInput = document.getElementById('searchInput');
-    const cityInput = document.getElementById('cityInput');
     const searchBtn = document.getElementById('searchBtn');
     const grid = document.getElementById('restaurantsGrid');
     const loadingState = document.getElementById('loadingState');
     const errorState = document.getElementById('errorState');
     const emptyState = document.getElementById('emptyState');
-    const currentCityEl = document.getElementById('currentCity');
 
-    searchBtn?.addEventListener('click', () => loadRestaurants(searchInput?.value, cityInput?.value));
-    searchInput?.addEventListener('keypress', (e) => { if (e.key === 'Enter') loadRestaurants(searchInput.value, cityInput?.value); });
-    cityInput?.addEventListener('keypress', (e) => { if (e.key === 'Enter') loadRestaurants(searchInput?.value, cityInput.value); });
+    searchBtn?.addEventListener('click', () => loadRestaurants(searchInput?.value));
+    searchInput?.addEventListener('keypress', (e) => { if (e.key === 'Enter') loadRestaurants(searchInput.value); });
 
-    async function loadRestaurants(query = '', city = '') {
+    async function loadRestaurants(query = '') {
         if (grid) grid.innerHTML = '';
         loadingState?.classList.remove('hidden');
         errorState?.classList.add('hidden');
         emptyState?.classList.add('hidden');
-        if (currentCityEl) currentCityEl.textContent = city || 'Everywhere';
 
         try {
-            const params = { page: 1, page_size: 20 };
+            const params = { skip: 0, limit: 50 };
             if (query) params.query = query;
-            if (city) params.city = city;
 
             const { data } = await restaurantApi.list(params);
             loadingState?.classList.add('hidden');
 
-            if (data.items && data.items.length > 0) {
+            if (data && data.items && data.items.length > 0) {
                 grid.innerHTML = data.items.map(r => `
-                    <a href="/restaurant.html?slug=${encodeURIComponent(r.slug)}"
-                       class="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow border border-gray-100 overflow-hidden block">
-                        <div class="h-40 bg-gray-100 relative flex items-center justify-center">
-                            ${r.cover_image_url
-                                ? `<img src="${escapeHtml(r.cover_image_url)}" class="w-full h-full object-cover" alt="${escapeHtml(r.name)}">`
-                                : `<svg class="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>`
+                    <a href="/restaurant.html?id=${encodeURIComponent(r.slug)}" class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow border border-surface-container-high group cursor-pointer block ${!r.is_open ? 'opacity-75 grayscale-[20%]' : ''}">
+                        <div class="relative h-48 w-full">
+                            ${r.cover_image_url ? 
+                                `<img alt="${escapeHtml(r.name)}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" src="${escapeHtml(r.cover_image_url)}"/>` :
+                                `<div class="w-full h-full bg-surface-container-high flex items-center justify-center"><span class="material-symbols-outlined text-4xl text-surface-dim">restaurant</span></div>`
                             }
-                            ${r.is_open
-                                ? '<span class="absolute top-2 left-2 bg-green-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">Open</span>'
-                                : '<span class="absolute top-2 left-2 bg-gray-400 text-white text-xs font-bold px-2 py-0.5 rounded-full">Closed</span>'
-                            }
+                            ${!r.is_open ? `
+                                <div class="absolute inset-0 bg-surface-dark/40 flex items-center justify-center backdrop-blur-[1px]">
+                                    <span class="bg-surface-dark text-white font-label-bold text-label-bold px-3 py-1.5 rounded uppercase tracking-wider">Currently Closed</span>
+                                </div>
+                            ` : ''}
                         </div>
-                        <div class="p-4">
-                            <h3 class="text-base font-bold text-gray-900 truncate">${escapeHtml(r.name)}</h3>
-                            <p class="text-sm text-gray-500 mt-0.5 truncate">${escapeHtml(r.city)}, ${escapeHtml(r.state)}</p>
-                            ${r.categories?.length ? `<p class="text-xs text-orange-500 mt-1">${r.categories.map(c => escapeHtml(c.name)).join(' · ')}</p>` : ''}
-                            <div class="flex items-center justify-between mt-3 text-sm">
-                                <span class="text-gray-500">Min order: ₹${r.minimum_order_amount || 0}</span>
-                                <span class="text-gray-500">${r.delivery_radius_km} km radius</span>
+                        <div class="p-card-padding">
+                            <div class="flex justify-between items-start mb-1">
+                                <h3 class="font-headline-md text-headline-md font-bold text-on-surface truncate">${escapeHtml(r.name)}</h3>
+                                <div class="flex items-center bg-tertiary-container text-white px-1.5 py-0.5 rounded text-xs font-bold gap-0.5">
+                                    ${r.rating ? r.rating.toFixed(1) : 'NEW'} <span class="material-symbols-outlined text-[10px]" style="font-variation-settings: 'FILL' 1;">star</span>
+                                </div>
                             </div>
-                            <div class="mt-2 text-sm">
-                                <span class="text-gray-600">Delivery: ${r.base_delivery_fee ? `₹${r.base_delivery_fee}` : 'Free'}</span>
-                                ${r.free_delivery_above ? `<span class="text-green-600 ml-2">Free above ₹${r.free_delivery_above}</span>` : ''}
+                            <div class="flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm mb-2">
+                                <span class="flex items-center gap-1"><span class="material-symbols-outlined text-sm">schedule</span> 30-45 mins</span>
+                                <span>•</span>
+                                <span>₹${r.minimum_order_amount || 300} for two</span>
                             </div>
+                            <p class="font-body-sm text-body-sm text-secondary truncate">${r.categories ? r.categories.map(c => escapeHtml(c.name)).join(', ') : ''}</p>
+                            ${r.free_delivery_above ? `
+                            <div class="mt-2 pt-2 border-t border-surface-container-high flex items-center gap-1 text-xs text-status-warning font-medium">
+                                <span class="material-symbols-outlined text-sm">local_shipping</span> FREE DELIVERY
+                            </div>` : ''}
                         </div>
                     </a>
                 `).join('');
             } else {
-                emptyState?.classList.remove('hidden');
+                if (emptyState) {
+                    emptyState.innerHTML = `
+                        <span class="material-symbols-outlined text-4xl text-on-surface-variant mb-2">search_off</span>
+                        <p class="font-body-md text-body-md text-on-surface-variant">No restaurants matched "${escapeHtml(query)}".</p>
+                        <p class="font-body-sm text-body-sm text-secondary mt-1">Try another search term.</p>
+                    `;
+                    emptyState.classList.remove('hidden');
+                }
             }
         } catch (err) {
             console.error(err);

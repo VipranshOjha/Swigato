@@ -79,3 +79,17 @@ async def suspend_restaurant(
 ):
     service = RestaurantService(db)
     return await service.suspend_restaurant(id)
+
+
+@router.patch(
+    "/{id}/activate",
+    response_model=RestaurantAdminResponse,
+    summary="Activate a suspended restaurant",
+)
+async def activate_restaurant(
+    id: uuid.UUID = Path(...),
+    current_user: AdminUser = None,
+    db: DbSession = None,
+):
+    service = RestaurantService(db)
+    return await service.activate_restaurant(id)

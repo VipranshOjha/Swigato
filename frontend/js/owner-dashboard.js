@@ -56,6 +56,26 @@ document.addEventListener('DOMContentLoaded', async () => {
                         </div>
                     ` : ''}
 
+                    ${r.approval_status === 'APPROVED' ? `
+                        <div class="mt-4 flex items-center justify-between px-4 py-3 bg-gray-50 border border-gray-100 rounded-lg">
+                            <div>
+                                <span class="text-sm font-bold text-gray-900 block">Accepting Orders</span>
+                                <span class="text-xs text-gray-500">Toggle to open or close</span>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" class="sr-only peer toggle-is-open" data-id="${r.id}" ${r.is_open ? 'checked' : ''}>
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                            </label>
+                        </div>
+                        <a href="owner-menu.html?id=${r.id}" class="mt-2 block w-full text-center px-4 py-2 bg-orange-50 text-orange-600 rounded-lg text-sm font-medium hover:bg-orange-100 transition-colors">
+                            Manage Menu
+                        </a>
+                    ` : `
+                        <div class="mt-4 text-center px-4 py-2 bg-gray-50 text-gray-400 rounded-lg text-sm font-medium">
+                            Menu Locked (Pending Approval)
+                        </div>
+                    `}
+                    
                     <div class="flex items-center gap-2 mt-4">
                         <a href="/owner-restaurant-detail.html?id=${r.id}"
                            class="flex-1 text-center text-sm font-medium py-2 px-3 bg-orange-50 text-orange-600 rounded-lg hover:bg-orange-100 transition-colors">
@@ -87,6 +107,22 @@ document.addEventListener('DOMContentLoaded', async () => {
                     showToast(typeof msg === 'string' ? msg : 'Failed to submit', 'error');
                     btn.disabled = false;
                     btn.textContent = 'Submit for Approval';
+                }
+            });
+        });
+
+        // Toggle Open/Closed
+        document.querySelectorAll('.toggle-is-open').forEach(toggle => {
+            toggle.addEventListener('change', async (e) => {
+                const id = e.currentTarget.dataset.id;
+                const isOpen = e.currentTarget.checked;
+                try {
+                    await ownerApi.update(id, { is_open: isOpen });
+                    showToast(isOpen ? 'Restaurant is now OPEN' : 'Restaurant is now CLOSED', 'success');
+                } catch (err) {
+                    e.currentTarget.checked = !isOpen; // Revert visually
+                    const msg = err.response?.data?.detail || 'Failed to update status';
+                    showToast(typeof msg === 'string' ? msg : 'Failed to update status', 'error');
                 }
             });
         });

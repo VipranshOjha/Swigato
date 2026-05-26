@@ -111,6 +111,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (r.approval_status === 'APPROVED') {
             actions.push(`<button onclick="triggerAction('${r.id}', 'suspend')" class="text-yellow-600 hover:text-yellow-900 font-medium">Suspend</button>`);
         }
+        if (r.approval_status === 'SUSPENDED') {
+            actions.push(`<button onclick="triggerAction('${r.id}', 'activate')" class="text-green-600 hover:text-green-900 font-medium">Activate</button>`);
+        }
         return actions.join(' · ') || '<span class="text-gray-400 text-xs">—</span>';
     }
 
@@ -119,7 +122,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         currentRestaurantId = id;
         currentAction = action;
 
-        const titles = { approve: 'Approve Restaurant', reject: 'Reject Restaurant', suspend: 'Suspend Restaurant' };
+        const titles = { approve: 'Approve Restaurant', reject: 'Reject Restaurant', suspend: 'Suspend Restaurant', activate: 'Activate Restaurant' };
         document.getElementById('modalTitle').textContent = titles[action] || action;
 
         const reasonWrapper = document.getElementById('actionReason')?.parentElement;
@@ -159,6 +162,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             } else if (currentAction === 'suspend') {
                 await adminApi.suspend(currentRestaurantId);
                 showToast('Restaurant suspended', 'success');
+            } else if (currentAction === 'activate') {
+                await adminApi.activate(currentRestaurantId);
+                showToast('Restaurant activated', 'success');
             }
             modal?.classList.add('hidden');
             await loadRestaurants();
