@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Swigato - Order Placed Successfully!</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#984800",
+                        "primary-container": "#fc8019",
+                        "on-primary": "#ffffff",
+                        "surface": "#faf9ff",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-highest": "#e1e2ed",
+                        "outline-variant": "#dec1b0",
+                        "on-surface": "#191b23",
+                        "on-surface-variant": "#574236",
+                        "error": "#ba1a1a",
+                        "status-success": "#60B246",
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-surface text-on-surface font-[Inter] min-h-screen flex flex-col items-center justify-center p-4">
+
+    <!-- Loading State -->
+    <div id="loadingState" class="flex flex-col items-center justify-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-container mb-4"></div>
+        <p class="text-on-surface-variant text-sm font-semibold">Loading your order details...</p>
+    </div>
+
+    <!-- Error State -->
+    <div id="errorState" class="hidden flex-col items-center justify-center bg-surface-container-lowest p-8 rounded-lg shadow border border-outline-variant max-w-md w-full text-center">
+        <span class="material-symbols-outlined text-error text-6xl mb-4">error</span>
+        <h2 class="text-xl font-bold mb-2">Failed to load order</h2>
+        <p id="errorMessage" class="text-sm text-on-surface-variant mb-6">Could not fetch your order details.</p>
+        <a href="/" class="px-6 py-2 bg-primary-container text-on-primary rounded font-semibold hover:bg-primary transition-colors">Return to Home</a>
+    </div>
+
+    <!-- Success Content -->
+    <div id="successContent" class="hidden flex-col items-center justify-center bg-surface-container-lowest p-8 rounded-lg shadow-[0_4px_16px_rgba(0,0,0,0.08)] border border-outline-variant max-w-md w-full text-center">
+        
+        <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6 text-status-success shadow-inner">
+            <span class="material-symbols-outlined text-5xl">check_circle</span>
+        </div>
+        
+        <h1 class="text-2xl font-extrabold text-primary mb-2">Order Placed Successfully!</h1>
+        <p class="text-sm text-on-surface-variant mb-6">Your food will be prepared soon by <strong id="displayRestaurant">...</strong>.</p>
+        
+        <div class="w-full bg-surface-bright rounded p-4 mb-6 border border-dashed border-outline-variant text-left">
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-xs text-on-surface-variant uppercase tracking-wider font-semibold">Order ID</span>
+                <span id="displayOrderId" class="font-mono text-xs font-bold bg-surface-container-highest px-2 py-0.5 rounded">...</span>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-xs text-on-surface-variant uppercase tracking-wider font-semibold">Total Paid</span>
+                <span id="displayAmount" class="font-price-display font-extrabold text-primary">₹...</span>
+            </div>
+        </div>
+        
+        <div class="flex flex-col gap-3 w-full">
+            <button id="trackOrderBtn" class="w-full py-3 bg-primary-container text-on-primary font-bold rounded shadow hover:bg-primary transition-colors flex items-center justify-center gap-2">
+                Track Order
+            </button>
+            <a href="/" class="w-full py-3 bg-surface border border-outline-variant text-on-surface font-semibold rounded hover:bg-surface-container-highest transition-colors">
+                Back to Home
+            </a>
+        </div>
+    </div>
+
+    <script type="module" src="/js/protected.js"></script>
+    <script type="module" src="/js/order-success.js"></script>
+</body>
+</html>

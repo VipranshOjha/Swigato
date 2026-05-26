@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Swigato</title>
+    <title>Admin Payments - Swigato</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -16,8 +16,8 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div class="flex items-center gap-4">
                 <a href="/index.html" class="text-xl font-bold text-white tracking-tight">Swigato Admin</a>
-                <a href="/admin-dashboard.html" class="text-sm font-bold text-white border-b-2 border-white pb-1">Restaurants</a>
-                <a href="/admin-payments.html" class="text-sm font-medium text-gray-300 hover:text-white transition-colors">Payments</a>
+                <a href="/admin-dashboard.html" class="text-sm font-medium text-gray-300 hover:text-white transition-colors">Restaurants</a>
+                <a href="/admin-payments.html" class="text-sm font-bold text-white border-b-2 border-white pb-1">Payments</a>
             </div>
             <div class="flex items-center gap-4 text-white">
                 <span id="adminName" class="text-sm font-medium"></span>
@@ -30,17 +30,18 @@
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div class="mb-8 flex justify-between items-end">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">Restaurant Approvals</h1>
-                <p class="text-gray-500 mt-1">Review and manage partner applications</p>
+                <h1 class="text-2xl font-bold text-gray-900">Payments & Refunds</h1>
+                <p class="text-gray-500 mt-1">Review all system payments, refunds, and gateway interactions</p>
             </div>
-            <div>
-                <select id="statusFilter" class="block w-full pl-3 pr-10 py-2 text-base border border-gray-300 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm rounded-md shadow-sm bg-white">
-                    <option value="PENDING_APPROVAL">Pending Approval</option>
-                    <option value="APPROVED">Approved</option>
-                    <option value="REJECTED">Rejected</option>
-                    <option value="SUSPENDED">Suspended</option>
-                    <option value="DRAFT">Draft</option>
+            <div class="flex gap-2">
+                <select id="statusFilter" class="block pl-3 pr-8 py-2 text-base border border-gray-300 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm rounded-md shadow-sm bg-white">
                     <option value="">All Statuses</option>
+                    <option value="pending">Pending</option>
+                    <option value="processing">Processing</option>
+                    <option value="authorized">Authorized</option>
+                    <option value="captured">Captured</option>
+                    <option value="failed">Failed</option>
+                    <option value="refunded">Refunded</option>
                 </select>
             </div>
         </div>
@@ -50,15 +51,15 @@
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Restaurant</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order ID</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Gateway Info</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
                         <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
-                <tbody id="restaurantsTableBody" class="bg-white divide-y divide-gray-200">
+                <tbody id="paymentsTableBody" class="bg-white divide-y divide-gray-200">
                     <!-- Loaded via JS -->
                 </tbody>
             </table>
@@ -101,6 +102,7 @@
     <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2"></div>
 
     <script type="module" src="/js/toast.js"></script>
-    <script type="module" src="/js/admin-dashboard.js"></script>
+    <script type="module" src="/js/protected.js"></script>
+    <script type="module" src="/js/admin-payments.js"></script>
 </body>
 </html>

@@ -39,7 +39,7 @@ class OrderStatus(StrEnum):
     """
     # Pre-payment
     PENDING = "pending"                        # Cart → checkout initiated
-    PAYMENT_INITIATED = "payment_initiated"    # Payment gateway called
+    AWAITING_PAYMENT = "awaiting_payment"      # Payment gateway called
     PAYMENT_FAILED = "payment_failed"          # Gateway returned failure
     # Post-payment / COD
     PLACED = "placed"                          # Payment confirmed OR COD order placed
@@ -57,14 +57,22 @@ class OrderStatus(StrEnum):
     CANCELLED = "cancelled"                    # Cancelled before pickup
     REFUNDED = "refunded"                      # Money returned
 
+PRE_PAYMENT_STATUSES = [
+    OrderStatus.PENDING,
+    OrderStatus.AWAITING_PAYMENT,
+    OrderStatus.PAYMENT_FAILED,
+]
+
 
 # ─── Payment ──────────────────────────────────────────────────────────────────
 
 class PaymentStatus(StrEnum):
     PENDING = "pending"
+    PROCESSING = "processing"
     AUTHORIZED = "authorized"
     CAPTURED = "captured"
     FAILED = "failed"
+    CANCELLED = "cancelled"
     REFUNDED = "refunded"
     PARTIALLY_REFUNDED = "partially_refunded"
 
@@ -187,17 +195,17 @@ class CancelledBy(StrEnum):
 
 ORDER_TRANSITIONS: dict[OrderStatus, set[OrderStatus]] = {
     OrderStatus.PENDING: {
-        OrderStatus.PAYMENT_INITIATED,
+        OrderStatus.AWAITING_PAYMENT,
         OrderStatus.PLACED,       # COD bypasses payment
         OrderStatus.CANCELLED,
     },
-    OrderStatus.PAYMENT_INITIATED: {
+    OrderStatus.AWAITING_PAYMENT: {
         OrderStatus.PLACED,
         OrderStatus.PAYMENT_FAILED,
         OrderStatus.CANCELLED,
     },
     OrderStatus.PAYMENT_FAILED: {
-        OrderStatus.PAYMENT_INITIATED,  # Retry
+        OrderStatus.AWAITING_PAYMENT,  # Retry
         OrderStatus.CANCELLED,
     },
     OrderStatus.PLACED: {

@@ -311,14 +311,23 @@ Completed:
 ✅ Cart API Endpoints: Get cart, add/update/remove items, clear cart (Phase 5 API)
 ✅ Single-restaurant enforcement in Cart business rules (Phase 5 Business Logic)
 ✅ Cart Frontend Integration: Floating cart overlay, cart page, item count update (Phase 5 Frontend)
+✅ Order Management Domain (Phase 6): Order, OrderItem, and OrderStatusHistory DB models, CRUD schemas, repositories, and services
+✅ Customer checkout order placement, cancellation, and tracking API endpoints (Phase 6 Customer APIs)
+✅ Owner Order Management dashboard and order action APIs: accept, reject, mark preparation/ready (Phase 6 Owner APIs)
+✅ Admin system-wide order audit logs and detailed listing APIs (Phase 6 Admin APIs)
+✅ Order Flow Frontend: Checkout page, Order History dashboard, Order detail status tracker, and Owner order manager (Phase 6 Frontend)
+✅ Payments Domain & DB Schema (Phase 7): Payment and Refund models, repositories, schemas, and service layers
+✅ Payment checkout integration: Payment initialization and mock Razorpay payment processing (Phase 7 APIs)
+✅ Idempotent payment webhook receiver: Razorpay event logging and async order state transitioning (Phase 7 Webhook)
+✅ Payments Frontend Integration: Payment selection and mock checkout widget, success redirection, and admin transaction panel (Phase 7 Frontend)
 
 Currently Working On:
 
-🔄 Order Management Domain (Phase 6)
+🔄 Delivery Partner Domain & Management (Phase 8)
 
 Next Phase:
 
-➡ Payments Domain & Flow (Phase 7)
+➡ Reviews, Coupons, and Notifications (Phase 9)
 
 ---
 
@@ -329,12 +338,10 @@ Next Phase:
 ✅ Phase 3: Restaurants
 ✅ Phase 4: Menus
 ✅ Phase 5: Cart
+✅ Phase 6: Orders
+✅ Phase 7: Payments
 
-🔄 Phase 6: Orders
-
-⬜ Phase 7: Payments
-
-⬜ Phase 8: Delivery
+🔄 Phase 8: Delivery
 
 ⬜ Phase 9: Reviews, Coupons, Notifications
 
@@ -354,6 +361,8 @@ Backend:
 ✅ Restaurant endpoints active (Owner, Admin, Public)
 ✅ Menu endpoints active (Owner, Public)
 ✅ Cart endpoints active (Customer)
+✅ Order endpoints active (Customer, Owner, Admin)
+✅ Payment endpoints and webhooks active (Customer, Admin)
 
 Frontend:
 ✅ Running locally
@@ -364,6 +373,8 @@ Frontend:
 ✅ Restaurant Onboarding & Dashboards integrated
 ✅ Menu listing and item availability management integrated
 ✅ Cart view, item addition, quantity updates, and cart persistence integrated
+✅ Checkout, order tracking, and order history panels integrated
+✅ Payment integration and admin transaction log panel integrated
 
 Testing:
 ✅ Authentication flow verified
@@ -373,6 +384,8 @@ Testing:
 ✅ Restaurant creation, submission, approval, and search verified
 ✅ Menu CRUD and item availability toggle verified
 ✅ Cart CRUD and single-restaurant enforcement verified
+✅ Order status transitioning, customer/owner dashboard permissions verified
+✅ Payment initialization and idempotent webhook transaction flows verified
 
 ---
 

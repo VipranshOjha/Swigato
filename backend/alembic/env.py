@@ -28,6 +28,8 @@ from app.models.user import (  # noqa: F401
     UserRole,
 )
 from app.models.audit import AuditLog  # noqa: F401
+from app.models.order import Order, OrderItem, OrderStatusHistory  # noqa: F401
+from app.models.payment import Payment, PaymentEvent, Refund  # noqa: F401
 
 # ─── Alembic config ───────────────────────────────────────────────────────────
 config = context.config

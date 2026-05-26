@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Swigato - Payment</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#984800",
+                        "primary-container": "#fc8019",
+                        "on-primary": "#ffffff",
+                        "surface": "#faf9ff",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-highest": "#e1e2ed",
+                        "outline-variant": "#dec1b0",
+                        "on-surface": "#191b23",
+                        "on-surface-variant": "#574236",
+                        "error": "#ba1a1a",
+                        "status-success": "#60B246",
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-surface text-on-surface font-[Inter] min-h-screen flex flex-col items-center justify-center p-4">
+
+    <!-- Loading State -->
+    <div id="loadingState" class="flex flex-col items-center justify-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-container mb-4"></div>
+        <p class="text-on-surface-variant text-sm font-semibold">Initializing Mock Payment...</p>
+    </div>
+
+    <!-- Error State -->
+    <div id="errorState" class="hidden flex-col items-center justify-center bg-surface-container-lowest p-8 rounded-lg shadow border border-outline-variant max-w-md w-full text-center">
+        <span class="material-symbols-outlined text-error text-6xl mb-4">error</span>
+        <h2 class="text-xl font-bold mb-2">Payment Failed to Initialize</h2>
+        <p id="errorMessage" class="text-sm text-on-surface-variant mb-6">Something went wrong.</p>
+        <a href="/" class="px-6 py-2 bg-primary-container text-on-primary rounded font-semibold hover:bg-primary transition-colors">Return to Home</a>
+    </div>
+
+    <!-- Payment UI -->
+    <div id="paymentContent" class="hidden flex-col bg-surface-container-lowest p-8 rounded-lg shadow-[0_4px_16px_rgba(0,0,0,0.08)] border border-outline-variant max-w-md w-full">
+        <div class="text-center mb-6 border-b border-surface-container-highest pb-6">
+            <h1 class="text-2xl font-extrabold text-primary mb-2">Mock Payment Gateway</h1>
+            <p class="text-sm text-on-surface-variant">This is a simulated payment environment.</p>
+        </div>
+
+        <div class="space-y-4 mb-8 text-sm">
+            <div class="flex justify-between">
+                <span class="text-on-surface-variant font-medium">Order ID</span>
+                <span id="displayOrderId" class="font-mono text-xs font-semibold">...</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-on-surface-variant font-medium">Gateway</span>
+                <span id="displayGateway" class="font-semibold uppercase">...</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-on-surface-variant font-medium">Status</span>
+                <span class="font-semibold px-2 py-0.5 rounded bg-orange-100 text-orange-800 text-xs uppercase">Pending</span>
+            </div>
+            <div class="flex justify-between items-center border-t border-dashed border-outline-variant pt-4 mt-4">
+                <span class="text-on-surface-variant font-bold text-base">Amount to Pay</span>
+                <span id="displayAmount" class="text-2xl font-extrabold text-primary">₹0.00</span>
+            </div>
+        </div>
+
+        <div class="flex flex-col gap-4">
+            <button id="btnSuccess" class="w-full py-3 bg-status-success text-white font-bold rounded shadow hover:bg-green-600 transition-colors flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined">check_circle</span> Simulate Successful Payment
+            </button>
+            <button id="btnFailure" class="w-full py-3 bg-error text-white font-bold rounded shadow hover:bg-red-700 transition-colors flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined">cancel</span> Simulate Failed Payment
+            </button>
+        </div>
+        
+        <div id="pollStatus" class="hidden mt-6 text-center text-xs text-primary font-semibold flex items-center justify-center gap-2">
+            <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+            Processing webhook... please wait.
+        </div>
+    </div>
+
+    <script type="module" src="/js/protected.js"></script>
+    <script type="module" src="/js/payment.js"></script>
+</body>
+</html>

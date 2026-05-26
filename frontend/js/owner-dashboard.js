@@ -67,9 +67,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
                             </label>
                         </div>
-                        <a href="owner-menu.html?id=${r.id}" class="mt-2 block w-full text-center px-4 py-2 bg-orange-50 text-orange-600 rounded-lg text-sm font-medium hover:bg-orange-100 transition-colors">
-                            Manage Menu
-                        </a>
+                        <div class="mt-2 grid grid-cols-2 gap-2">
+                            <a href="owner-menu.html?id=${r.id}" class="block w-full text-center px-4 py-2 bg-gray-50 text-gray-700 border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors">
+                                Manage Menu
+                            </a>
+                            <a href="owner-orders.html?id=${r.id}" class="block w-full text-center px-4 py-2 bg-orange-50 text-orange-600 border border-orange-200 rounded-lg text-sm font-medium hover:bg-orange-100 transition-colors">
+                                Live Orders
+                            </a>
+                        </div>
                     ` : `
                         <div class="mt-4 text-center px-4 py-2 bg-gray-50 text-gray-400 rounded-lg text-sm font-medium">
                             Menu Locked (Pending Approval)

@@ -163,11 +163,11 @@ function renderMenu() {
                         
                         <div class="flex flex-col items-end gap-2 ml-4 border-l pl-4 border-gray-100">
                             <label class="flex items-center cursor-pointer gap-2 mb-2" title="Toggle Availability">
-                                <span class="text-xs text-gray-500 font-medium">${item.is_available ? 'Available' : 'Out of Stock'}</span>
+                                <span id="avail-text-${item.id}" class="text-xs text-gray-500 font-medium w-20 text-right">${item.is_available ? 'Available' : 'Out of Stock'}</span>
                                 <div class="relative">
-                                    <input type="checkbox" class="sr-only" ${item.is_available ? 'checked' : ''} onchange="toggleItemAvailability('${item.id}', this.checked)">
-                                    <div class="block w-8 h-4 bg-gray-200 rounded-full ${item.is_available ? 'bg-orange-500' : ''} transition-colors"></div>
-                                    <div class="dot absolute left-1 top-1 bg-white w-2 h-2 rounded-full transition-transform ${item.is_available ? 'transform translate-x-4' : ''}"></div>
+                                    <input type="checkbox" class="sr-only peer" ${item.is_available ? 'checked' : ''} onchange="toggleItemAvailability('${item.id}', this.checked)">
+                                    <div class="block w-8 h-4 bg-gray-200 rounded-full peer-checked:bg-orange-500 transition-colors"></div>
+                                    <div class="dot absolute left-1 top-1 bg-white w-2 h-2 rounded-full transition-transform peer-checked:translate-x-4"></div>
                                 </div>
                             </label>
                             
@@ -369,8 +369,14 @@ async function toggleItemAvailability(id, isAvailable) {
         // Silently update local state instead of full reload to prevent UI jump
         const item = items.find(i => i.id === id);
         if (item) item.is_available = isAvailable;
+        const textEl = document.getElementById(`avail-text-${id}`);
+        if (textEl) textEl.textContent = isAvailable ? 'Available' : 'Out of Stock';
     } catch (error) {
-        alert(error.response?.data?.detail || "Failed to update availability");
+        let msg = "Failed to update availability";
+        if (error.response?.data?.error?.message) msg = error.response.data.error.message;
+        else if (error.response?.data?.detail) msg = Array.isArray(error.response.data.detail) ? error.response.data.detail.map(d => `${d.loc?.slice(-1)[0] || 'Field'}: ${d.msg}`).join('\n') : error.response.data.detail;
+        
+        alert(msg);
         await loadMenuData(); // Reload to reset UI state
     }
 }

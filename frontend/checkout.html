@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Swigato - Checkout</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-lowest": "#ffffff",
+                        "primary": "#984800",
+                        "on-background": "#191b23",
+                        "inverse-primary": "#ffb689",
+                        "outline-variant": "#dec1b0",
+                        "inverse-surface": "#2d3038",
+                        "on-tertiary-container": "#0c4200",
+                        "on-primary-fixed": "#311300",
+                        "surface-container-high": "#e6e7f2",
+                        "error": "#ba1a1a",
+                        "surface-container-highest": "#e1e2ed",
+                        "secondary-fixed-dim": "#c2c5de",
+                        "on-surface": "#191b23",
+                        "surface-container": "#ecedf8",
+                        "on-surface-variant": "#574236",
+                        "on-error": "#ffffff",
+                        "tertiary-fixed-dim": "#86db69",
+                        "on-primary-container": "#5e2a00",
+                        "on-secondary-container": "#5e6177",
+                        "primary-fixed-dim": "#ffb689",
+                        "on-secondary-fixed-variant": "#42465a",
+                        "status-success": "#60B246",
+                        "inverse-on-surface": "#eff0fb",
+                        "on-primary-fixed-variant": "#733500",
+                        "on-primary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "surface-bright": "#faf9ff",
+                        "surface-container-low": "#f2f3fe",
+                        "status-error": "#E13D45",
+                        "primary-container": "#fc8019",
+                        "surface-dark": "#171A29",
+                        "on-tertiary-fixed-variant": "#115300",
+                        "tertiary-container": "#63b549",
+                        "outline": "#8b7264",
+                        "on-secondary-fixed": "#161b2d",
+                        "secondary": "#5a5d73",
+                        "primary-fixed": "#ffdbc8",
+                        "tertiary": "#1b6d01",
+                        "surface-variant": "#e1e2ed",
+                        "error-container": "#ffdad6",
+                        "on-tertiary": "#ffffff",
+                        "surface-tint": "#984800",
+                        "secondary-fixed": "#dee1fa",
+                        "surface": "#faf9ff",
+                        "surface-background": "#FFFFFF",
+                        "tertiary-fixed": "#a1f882",
+                        "secondary-container": "#dbdef8",
+                        "surface-dim": "#d8d9e4",
+                        "on-tertiary-fixed": "#032100",
+                        "status-warning": "#DB7C38",
+                        "on-secondary": "#ffffff",
+                        "background": "#faf9ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "base": "8px",
+                        "section-gap": "32px",
+                        "gutter": "16px",
+                        "container-margin": "16px",
+                        "card-padding": "12px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Inter"],
+                        "body-sm": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-bold": ["Inter"],
+                        "headline-xl": ["Inter"],
+                        "body-md": ["Inter"],
+                        "price-display": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-bold": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "headline-xl": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "800" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "price-display": ["16px", { "lineHeight": "20px", "fontWeight": "600" }],
+                        "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "headline-lg-mobile": ["20px", { "lineHeight": "28px", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .veg-icon { width: 12px; height: 12px; border: 1px solid #60B246; display: flex; align-items: center; justify-content: center; border-radius: 2px; }
+        .veg-dot { width: 6px; height: 6px; background-color: #60B246; border-radius: 50%; }
+        .non-veg-icon { width: 12px; height: 12px; border: 1px solid #E13D45; display: flex; align-items: center; justify-content: center; border-radius: 2px; }
+        .non-veg-triangle { width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-bottom: 6px solid #E13D45; }
+        .qty-btn { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #fc8019; font-weight: 600; font-size: 18px; }
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md min-h-screen flex flex-col">
+    <!-- TopNavBar (Shared Component) -->
+    <nav class="bg-surface shadow-sm docked full-width top-0 sticky z-50 flex justify-between items-center w-full px-container-margin py-4 max-w-7xl mx-auto">
+        <div class="flex items-center gap-4">
+            <a class="text-on-surface-variant hover:text-primary transition-colors flex items-center" href="/">
+                <span class="material-symbols-outlined mr-1" style="font-variation-settings: 'FILL' 0;">arrow_back</span>
+                <span class="hidden md:inline font-label-bold text-label-bold">Back</span>
+            </a>
+            <div class="border-l border-outline-variant h-6 mx-2 hidden md:block"></div>
+            <div class="flex items-center gap-2">
+                <span class="text-2xl">🛒</span>
+                <div>
+                    <h1 class="font-headline-lg text-headline-lg m-0 leading-none text-primary">Checkout</h1>
+                    <p class="font-body-sm text-body-sm text-on-surface-variant m-0 flex items-center gap-1" id="cartItemCountContainer">
+                        <span class="opacity-60">•</span> <span id="cartItemCount">0</span> items
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="flex items-center gap-4" id="authSection">
+            <!-- Rendered via JS -->
+            <a class="font-label-bold text-label-bold text-primary border-b-2 border-primary pb-1 flex items-center" href="#">
+                <span class="material-symbols-outlined mr-1" style="font-variation-settings: 'FILL' 1;">shopping_cart</span>
+                <span class="hidden md:inline">Cart</span>
+            </a>
+            <a class="text-on-surface-variant hover:text-primary transition-colors" href="/profile-settings.html">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">account_circle</span>
+            </a>
+        </div>
+    </nav>
+
+    <div id="loadingState" class="flex-grow flex justify-center items-center py-12">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-container"></div>
+    </div>
+
+    <!-- Main Content -->
+    <main id="mainContent" class="hidden flex-grow max-w-7xl mx-auto w-full px-container-margin py-section-gap grid grid-cols-1 lg:grid-cols-12 gap-8 relative">
+        <!-- Cart Items Section -->
+        <div class="lg:col-span-8 flex flex-col gap-6">
+            
+            <div class="flex justify-end">
+                <button id="clearCartBtn" class="text-error font-label-bold text-label-bold hover:underline hidden">
+                    Clear Cart
+                </button>
+            </div>
+
+            <!-- Items List -->
+            <div class="bg-surface-container-lowest rounded-lg shadow-[0_2px_8px_rgba(40,44,63,0.08)] border border-outline-variant overflow-hidden">
+                <h2 class="font-headline-md text-headline-md p-4 border-b border-surface-container-highest">Order Items</h2>
+                <div class="flex flex-col" id="cartItemsContainer">
+                    <!-- JS renders items here -->
+                </div>
+            </div>
+
+            <!-- Delivery Address Section -->
+            <div class="bg-surface-container-lowest rounded-lg shadow-[0_2px_8px_rgba(40,44,63,0.08)] border border-outline-variant overflow-hidden">
+                <div class="flex items-center justify-between p-4 border-b border-surface-container-highest">
+                    <h2 class="font-headline-md text-headline-md flex items-center gap-2">
+                        <span class="material-symbols-outlined">location_on</span>
+                        Delivery Address
+                    </h2>
+                    <a href="/address-management.html" class="text-primary text-sm font-label-bold hover:underline">Add/Edit Addresses</a>
+                </div>
+                <div class="p-4" id="addressListContainer">
+                    <!-- JS renders addresses here -->
+                    <p class="text-sm text-gray-500">Loading addresses...</p>
+                </div>
+            </div>
+            
+            <!-- Order Notes Section -->
+            <div class="bg-surface-container-lowest rounded-lg shadow-[0_2px_8px_rgba(40,44,63,0.08)] border border-outline-variant overflow-hidden">
+                <div class="p-4 border-b border-surface-container-highest">
+                    <h2 class="font-headline-md text-headline-md flex items-center gap-2">
+                        <span class="material-symbols-outlined">notes</span>
+                        Order Notes (Optional)
+                    </h2>
+                </div>
+                <div class="p-4">
+                    <textarea id="orderNotes" rows="2" class="w-full border border-gray-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50" placeholder="Any special instructions for the restaurant?"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Summary Section (Sticky) -->
+        <div class="lg:col-span-4">
+            <div class="bg-surface-container-lowest rounded-lg shadow-[0_2px_8px_rgba(40,44,63,0.08)] border border-outline-variant p-6 sticky top-[100px]">
+                <h2 class="font-headline-md text-headline-md mb-6 border-b border-surface-container-highest pb-4">Bill Details</h2>
+                <div class="flex flex-col gap-3 font-body-md text-body-md text-on-surface-variant mb-6">
+                    <div class="flex justify-between">
+                        <span>Item Total</span>
+                        <span class="text-on-surface font-semibold" id="subtotal">₹0</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Delivery Fee</span>
+                        <span class="text-on-surface font-semibold" id="deliveryFee">₹0</span>
+                    </div>
+                    <div class="flex justify-between items-start">
+                        <span>Taxes &amp; Charges <span class="material-symbols-outlined text-[14px] align-middle ml-1">info</span></span>
+                        <span class="text-on-surface font-semibold" id="taxAmount">₹0</span>
+                    </div>
+                </div>
+                <div class="border-t border-dashed border-outline-variant pt-4 mb-6">
+                    <div class="flex justify-between items-center">
+                        <span class="font-headline-md text-headline-md">To Pay</span>
+                        <span class="font-headline-lg text-headline-lg-mobile md:text-headline-lg" id="grandTotal">₹0</span>
+                    </div>
+                </div>
+                <button id="checkoutBtn" class="w-full bg-primary-container text-on-primary font-label-bold text-label-bold py-4 rounded-lg flex items-center justify-between px-6 hover:bg-surface-tint transition-colors shadow-md active:scale-95">
+                    <div class="flex flex-col items-start">
+                        <span class="text-[14px] font-bold" id="checkoutBtnTotal">₹0</span>
+                        <span class="text-[10px] opacity-80 uppercase tracking-wider">Total</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span>Place Order</span>
+                        <span class="material-symbols-outlined text-[18px]">chevron_right</span>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Empty State -->
+    <div id="emptyState" class="hidden flex-grow flex flex-col items-center justify-center p-8 text-center">
+        <div class="w-48 h-48 mb-6 bg-surface-container-high rounded-full flex items-center justify-center">
+            <span class="material-symbols-outlined text-[80px] text-surface-dim">shopping_cart_checkout</span>
+        </div>
+        <h2 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg mb-2">Your cart is empty</h2>
+        <p class="font-body-lg text-body-lg text-on-surface-variant mb-8 max-w-md">Looks like you haven't added anything yet. Explore our top restaurants and find something delicious.</p>
+        <a href="/" class="bg-primary-container text-on-primary font-label-bold text-label-bold py-3 px-8 rounded-lg hover:bg-surface-tint transition-colors">
+            Browse Restaurants
+        </a>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-surface-dark dark:bg-inverse-surface mt-auto full-width border-t border-surface-container-highest">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-section-gap px-container-margin py-12 max-w-7xl mx-auto">
+            <div>
+                <div class="font-headline-xl text-headline-xl text-surface-container-lowest mb-6">Swigato</div>
+                <p class="font-body-md text-body-md text-surface-dim">© 2026 Swigato Limited. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script type="module" src="/js/api.js"></script>
+    <script type="module" src="/js/auth.js"></script>
+    <script type="module" src="/js/protected.js"></script>
+    <script type="module" src="/js/checkout.js"></script>
+</body>
+</html>

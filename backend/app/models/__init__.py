@@ -31,3 +31,13 @@ from app.models.cart import (  # noqa: F401
     Cart,
     CartItem,
 )
+from app.models.order import (  # noqa: F401
+    Order,
+    OrderItem,
+    OrderStatusHistory,
+)
+from app.models.payment import (  # noqa: F401
+    Payment,
+    PaymentEvent,
+    Refund,
+)

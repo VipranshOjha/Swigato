@@ -162,3 +162,33 @@ export const restaurantApi = {
     list: (params) => api.get('/api/v1/restaurants/', { params }),
     get: (slug) => api.get(`/api/v1/restaurants/${slug}`),
 };
+
+export const customerOrderApi = {
+    create: (data) => api.post('/api/v1/orders', data),
+    list: (params) => api.get('/api/v1/orders', { params }),
+    get: (id) => api.get(`/api/v1/orders/${id}`),
+    cancel: (id) => api.patch(`/api/v1/orders/${id}/cancel`),
+};
+
+export const ownerOrderApi = {
+    list: (params) => api.get('/api/v1/owner/orders', { params }),
+    get: (id) => api.get(`/api/v1/owner/orders/${id}`),
+    accept: (id) => api.patch(`/api/v1/owner/orders/${id}/accept`),
+    reject: (id, reason) => api.patch(`/api/v1/owner/orders/${id}/reject`, { reason }),
+    updateStatus: (id, new_status) => api.patch(`/api/v1/owner/orders/${id}/status?new_status=${new_status}`),
+};
+
+export const adminOrderApi = {
+    list: (params) => api.get('/api/v1/admin/orders', { params }),
+    get: (id) => api.get(`/api/v1/admin/orders/${id}`),
+};
+
+export const paymentApi = {
+    initialize: (orderId, gateway) => api.post(`/api/v1/payments/orders/${orderId}/initialize`, { gateway }),
+    mockWebhook: (gateway, payload) => api.post(`/api/v1/payments/webhooks/${gateway}`, payload),
+};
+
+export const adminPaymentApi = {
+    list: (params) => api.get('/api/v1/admin/payments', { params }),
+    refund: (paymentId, data) => api.post(`/api/v1/payments/${paymentId}/refund`, data),
+};

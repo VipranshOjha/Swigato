@@ -294,12 +294,15 @@ window.addToCart = async (itemId) => {
             window.location.href = `/login.html?redirect=/restaurant.html?id=${new URLSearchParams(window.location.search).get('id')}`;
         } else {
             let msg = 'Failed to add item to cart';
-            const detail = err.response?.data?.detail;
-            if (detail) {
-                if (Array.isArray(detail)) {
-                    msg = detail.map(d => `${d.loc.slice(-1)}: ${d.msg}`).join('\n');
-                } else {
-                    msg = detail;
+            const data = err.response?.data;
+            if (data) {
+                if (data.error && data.error.message) msg = data.error.message;
+                else if (data.detail) {
+                    if (Array.isArray(data.detail)) {
+                        msg = data.detail.map(d => `${d.loc?.slice(-1)[0] || 'Field'}: ${d.msg}`).join('\n');
+                    } else if (typeof data.detail === 'string') {
+                        msg = data.detail;
+                    }
                 }
             }
             alert(msg);
