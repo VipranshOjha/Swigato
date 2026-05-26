@@ -305,14 +305,20 @@ Completed:
 ✅ Admin Restaurant Approval & Suspension
 ✅ Public Restaurant Search & Discovery APIs
 ✅ Restaurant Frontend Integration (Onboarding, Dashboards, Discovery)
+✅ Menu Management Domain (Phase 4): Menu Category & Menu Item DB models, CRUD schemas, and API endpoints (owner and public)
+✅ Owner Menu Management UI & Public Restaurant Menu Discovery UI (Phase 4 Frontend)
+✅ Cart Management Domain & DB Schema (Phase 5): Cart and CartItem models, repositories, schemas, and business logic
+✅ Cart API Endpoints: Get cart, add/update/remove items, clear cart (Phase 5 API)
+✅ Single-restaurant enforcement in Cart business rules (Phase 5 Business Logic)
+✅ Cart Frontend Integration: Floating cart overlay, cart page, item count update (Phase 5 Frontend)
 
 Currently Working On:
 
-🔄 Menu Management Domain (Phase 4)
+🔄 Order Management Domain (Phase 6)
 
 Next Phase:
 
-➡ Cart Management Domain & Flow
+➡ Payments Domain & Flow (Phase 7)
 
 ---
 
@@ -321,12 +327,10 @@ Next Phase:
 ✅ Phase 1: Authentication & Foundation
 ✅ Phase 2: Profiles & Addresses
 ✅ Phase 3: Restaurants
+✅ Phase 4: Menus
+✅ Phase 5: Cart
 
-🔄 Phase 4: Menus
-
-⬜ Phase 5: Cart
-
-⬜ Phase 6: Orders
+🔄 Phase 6: Orders
 
 ⬜ Phase 7: Payments
 
@@ -348,6 +352,8 @@ Backend:
 ✅ Alembic migrations working
 ✅ OpenAPI documentation available
 ✅ Restaurant endpoints active (Owner, Admin, Public)
+✅ Menu endpoints active (Owner, Public)
+✅ Cart endpoints active (Customer)
 
 Frontend:
 ✅ Running locally
@@ -356,6 +362,8 @@ Frontend:
 ✅ Address management integrated
 ✅ Protected routes enabled
 ✅ Restaurant Onboarding & Dashboards integrated
+✅ Menu listing and item availability management integrated
+✅ Cart view, item addition, quantity updates, and cart persistence integrated
 
 Testing:
 ✅ Authentication flow verified
@@ -363,6 +371,8 @@ Testing:
 ✅ Address CRUD verified
 ✅ Default address logic verified
 ✅ Restaurant creation, submission, approval, and search verified
+✅ Menu CRUD and item availability toggle verified
+✅ Cart CRUD and single-restaurant enforcement verified
 
 ---
 
