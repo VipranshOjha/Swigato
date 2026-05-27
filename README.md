@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://via.placeholder.com/150/FC8019/FFFFFF?text=Swigato" alt="Swigato Logo" width="150" height="150" />
+  <img src="./assets/swigato-logo.png" alt="Swigato Logo" width="220" />
   <h1>Swigato — Food Delivery Platform</h1>
   <p><strong>A production-grade, full-stack food delivery ecosystem built with FastAPI, PostgreSQL, and Vite.</strong></p>
   
