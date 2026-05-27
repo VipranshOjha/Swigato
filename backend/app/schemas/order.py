@@ -47,6 +47,21 @@ class OrderStatusHistoryResponse(AppBaseModel):
     created_at: datetime
 
 
+from app.schemas.user import UserPublicResponse
+from app.schemas.address import AddressResponse
+
+class OrderRestaurantBrief(AppBaseModel):
+    id: uuid.UUID
+    name: str
+    phone: str
+    address: str
+    city: str
+    state: str
+    postal_code: str
+    logo_url: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+
 class OrderResponse(AppBaseModel):
     """Standard order response for list views."""
     id: uuid.UUID
@@ -63,6 +78,16 @@ class OrderResponse(AppBaseModel):
     notes: Optional[str] = None
     rejection_reason: Optional[str] = None
     items: list[OrderItemResponse] = []
+    
+    # New delivery details
+    delivery_earning: float = 0.0
+    rider_accepted_at: Optional[datetime] = None
+    
+    # Embedded relations
+    customer: Optional[UserPublicResponse] = None
+    restaurant: Optional[OrderRestaurantBrief] = None
+    delivery_address: Optional[AddressResponse] = None
+
     created_at: datetime
     updated_at: datetime
 

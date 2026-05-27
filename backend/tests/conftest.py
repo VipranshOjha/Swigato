@@ -241,3 +241,33 @@ async def restaurant_owner_token(client: AsyncClient, db_session: AsyncSession):
     response = await client.post("/api/v1/auth/login", json={"email": email, "password": password})
     return response.json().get("access_token", "")
 
+
+@pytest_asyncio.fixture
+async def delivery_partner_token(client: AsyncClient, db_session: AsyncSession):
+    email = "delivery@swigato.com"
+    password = "DeliveryPassword1!"
+    await client.post("/api/v1/auth/register", json={
+        "first_name": "Delivery",
+        "last_name": "Partner",
+        "email": email,
+        "password": password,
+    })
+    
+    from sqlalchemy import update, select
+    from app.models.user import User, Role, UserRole
+    
+    # Verify user
+    await db_session.execute(
+        update(User).where(User.email == email).values(is_email_verified=True)
+    )
+    # Assign delivery_partner role
+    delivery_role = (await db_session.execute(select(Role).where(Role.name == "delivery_partner"))).scalar_one()
+    user = (await db_session.execute(select(User).where(User.email == email))).scalar_one()
+    if not any(ur.role_id == delivery_role.id for ur in user.user_roles):
+        db_session.add(UserRole(user_id=user.id, role_id=delivery_role.id))
+        await db_session.commit()
+    
+    response = await client.post("/api/v1/auth/login", json={"email": email, "password": password})
+    return response.json().get("access_token", "")
+
+

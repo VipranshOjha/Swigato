@@ -192,3 +192,26 @@ export const adminPaymentApi = {
     list: (params) => api.get('/api/v1/admin/payments', { params }),
     refund: (paymentId, data) => api.post(`/api/v1/payments/${paymentId}/refund`, data),
 };
+
+export const deliveryApi = {
+    register: (data) => api.post('/api/v1/delivery/profile', data),
+    me: () => api.get('/api/v1/delivery/profile/me'),
+    updateMe: (data) => api.patch('/api/v1/delivery/profile/me', data),
+    toggleOnline: (isOnline) => api.patch('/api/v1/delivery/profile/me/online', { is_online: isOnline }),
+    updateLocation: (data) => api.post('/api/v1/delivery/profile/me/location', data),
+};
+
+export const deliveryOrderApi = {
+    list: (params) => api.get('/api/v1/delivery/orders', { params }),
+    accept: (orderId) => api.patch(`/api/v1/delivery/orders/${orderId}/accept`),
+    reject: (orderId) => api.patch(`/api/v1/delivery/orders/${orderId}/reject`),
+    pickup: (orderId) => api.patch(`/api/v1/delivery/orders/${orderId}/pickup`),
+    inTransit: (orderId) => api.patch(`/api/v1/delivery/orders/${orderId}/in-transit`),
+    deliver: (orderId) => api.patch(`/api/v1/delivery/orders/${orderId}/deliver`),
+};
+
+export const adminDeliveryApi = {
+    list: (params) => api.get('/api/v1/admin/delivery-partners', { params }),
+    verify: (profileId, verify) => api.patch(`/api/v1/admin/delivery-partners/${profileId}/verify?verify=${verify}`),
+    suspend: (profileId, suspend) => api.patch(`/api/v1/admin/delivery-partners/${profileId}/suspend?suspend=${suspend}`),
+};

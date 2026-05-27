@@ -119,6 +119,11 @@ class CouponNotFoundError(NotFoundError):
     message = "Coupon not found."
 
 
+class DeliveryPartnerNotFoundError(NotFoundError):
+    error_code = "DELIVERY_PARTNER_NOT_FOUND"
+    message = "Delivery partner not found."
+
+
 # ─── Conflict / Business Logic ────────────────────────────────────────────────
 
 class ConflictError(SwigatoException):
@@ -135,6 +140,11 @@ class EmailAlreadyExistsError(ConflictError):
 class PhoneAlreadyExistsError(ConflictError):
     error_code = "PHONE_EXISTS"
     message = "An account with this phone number already exists."
+
+
+class DeliveryPartnerNotVerifiedError(ConflictError):
+    error_code = "DELIVERY_PARTNER_NOT_VERIFIED"
+    message = "Delivery partner account is not verified or is suspended."
 
 
 class InvalidOrderStateTransitionError(SwigatoException):

@@ -38,27 +38,57 @@ Current Backend Domains Implemented:
 - Single restaurant constraint
 - Dynamic totals
 
+✅ Orders
+- Checkout order placement
+- Order details & status tracking
+- Owner dashboard order management (accept, reject, status updates)
+- Admin order list auditing
+
+✅ Payments
+- Payment initialization (intent creation)
+- Mock gateway integration (Razorpay flow)
+- Webhooks receiver for captured/failed status updates
+- Refund creation and status auditing
+
+✅ Delivery
+- Onboarding & Admin Approval
+- Partner availability states (online/offline)
+- Delivery path location tracking
+- Auto order assignment matching logic
+- Delivery status transitioning (assigned, accepted, picking_up, picked_up, delivering, delivered, failed)
+
 User Roles:
 
 1. Customer
 2. Restaurant Owner
-3. Admin
-4. Super Admin
+3. Delivery Partner
+4. Admin
+5. Super Admin
 
 Frontend Existing Pages:
 
-- Login
-- Register
-- Profile
-- Address Management
-- Owner Dashboard
-- Restaurant Onboarding
-- Restaurant Details
-- Menu Management
-- Admin Dashboard
-- Restaurant Listing
-- Restaurant Details
-- Cart
+- Login (`login.html`, `js/login.js`)
+- Register (`register.html`, `js/register.js`)
+- Profile Settings (`profile-settings.html`, `js/profile-settings.js`)
+- Address Management (`address-management.html`, `js/address-management.js`)
+- Owner Dashboard (`owner-dashboard.html`, `js/owner-dashboard.js`)
+- Owner Menu Management (`owner-menu.html`, `js/owner-menu.js`)
+- Owner Restaurant details (`owner-restaurant-detail.html`, `js/owner-restaurant-detail.js`)
+- Owner Order Management (`owner-orders.html`, `js/owner-orders.js`)
+- Restaurant Onboarding (`restaurant-onboarding.html`, `js/restaurant-onboarding.js`)
+- Public Restaurant Listing (`restaurants.html` / `index.html`, `js/restaurants.js`)
+- Public Restaurant Details & Menu Discovery (`restaurant.html`, `js/restaurant.js`)
+- Cart (`cart.html`, `js/cart.js`)
+- Checkout (`checkout.html`, `js/checkout.js`)
+- Payment processing (`payment.html`, `js/payment.js`)
+- Order Success (`order-success.html`, `js/order-success.js`)
+- Order History (`order-history.html`, `js/order-history.js`)
+- Order Detail Status Tracker (`order-detail.html`, `js/order-detail.js`)
+- Delivery Dashboard (`delivery-dashboard.html`, `js/delivery-dashboard.js`)
+- Delivery Order Details (`delivery-order-detail.html`, `js/delivery-order-detail.js`)
+- Admin Restaurants/Users Dashboard (`admin-dashboard.html`, `js/admin-dashboard.js`)
+- Admin Payments Audit Dashboard (`admin-payments.html`, `js/admin-payments.js`)
+- Admin Delivery Management (`admin-delivery.html`, `js/admin-delivery.js`)
 
 Backend API already exists.
 

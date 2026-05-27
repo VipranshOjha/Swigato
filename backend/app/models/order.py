@@ -64,6 +64,20 @@ class Order(Base, TimestampMixin):
     discount_amount: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False, default=0)
     total_amount: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
 
+    # Delivery assignment & Earnings
+    assigned_delivery_partner_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("delivery_partner_profiles.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    delivery_earning: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False, default=0.0)
+    earning_status: Mapped[str] = mapped_column(String(20), nullable=False, default="pending")
+
+    # Timestamps for delivery flow
+    rider_accepted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    picked_up_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    delivered_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
     # Optional
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     rejection_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -73,6 +87,9 @@ class Order(Base, TimestampMixin):
     restaurant: Mapped["Restaurant"] = relationship("Restaurant", foreign_keys=[restaurant_id])
     delivery_address: Mapped[Optional["Address"]] = relationship(
         "Address", foreign_keys=[delivery_address_id]
+    )
+    delivery_partner: Mapped[Optional["DeliveryPartnerProfile"]] = relationship(
+        "DeliveryPartnerProfile", foreign_keys=[assigned_delivery_partner_id]
     )
     items: Mapped[List["OrderItem"]] = relationship(
         "OrderItem",

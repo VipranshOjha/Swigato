@@ -41,3 +41,7 @@ from app.models.payment import (  # noqa: F401
     PaymentEvent,
     Refund,
 )
+from app.models.delivery import (  # noqa: F401
+    DeliveryPartnerProfile,
+    DeliveryLocationLog,
+)

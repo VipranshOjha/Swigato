@@ -240,6 +240,15 @@ class OrderService:
         if order.restaurant.owner_id != owner_id:
             raise PermissionDeniedError()
         
+        if new_status == OrderStatus.RIDER_ASSIGNED:
+            from app.services.delivery_service import DeliveryService
+            delivery_service = DeliveryService(self.session)
+            assigned = await delivery_service.auto_assign_order(order.id)
+            if not assigned:
+                raise HTTPException(status_code=400, detail="No online delivery partners available right now.")
+            order = await self._get_order(order.id)
+            return self._build_detail_response(order)
+            
         # Only certain transitions are typically driven by the owner (e.g. PREPARING, READY_FOR_PICKUP)
         order = await self._transition_state(order, new_status, changed_by=owner_id)
         await self.session.commit()

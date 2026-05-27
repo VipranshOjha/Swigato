@@ -15,6 +15,8 @@ function redirectByRoles(roles) {
         window.location.href = '/admin-dashboard.html';
     } else if (roles.includes('restaurant_owner')) {
         window.location.href = '/owner-dashboard.html';
+    } else if (roles.includes('delivery_partner')) {
+        window.location.href = '/delivery-dashboard.html';
     } else {
         window.location.href = '/index.html';
     }

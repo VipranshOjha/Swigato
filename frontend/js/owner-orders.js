@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const allFetchedOrders = res.data.items || [];
             
             // Filter to only active statuses for the live dashboard
-            const activeStatuses = ['placed', 'accepted', 'preparing', 'ready_for_pickup'];
+            const activeStatuses = ['placed', 'accepted', 'preparing', 'ready_for_pickup', 'rider_assigned', 'picked_up', 'in_transit'];
             allOrders = allFetchedOrders.filter(o => activeStatuses.includes(o.status));
             
             loadingState.classList.add('hidden');
