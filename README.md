@@ -1,74 +1,246 @@
-# Swigato
+<div align="center">
+  <img src="./assets/swigato-logo.png" alt="Swigato Logo" width="220" />
+  <h1>Swigato — Food Delivery Platform</h1>
+  <p><strong>A production-grade, full-stack food delivery ecosystem built with FastAPI, PostgreSQL, React, and Vite.</strong></p>
+  
+  [![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+  [![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+  [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+  [![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://react.dev/)
+  [![Vite](https://img.shields.io/badge/Vite-B73BFE?style=for-the-badge&logo=vite&logoColor=FFD62E)](https://vitejs.dev/)
+  [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+</div>
 
-Swigato is a modern, full-stack food delivery platform demonstrating a robust modular monolith architecture. Designed for high concurrency, real-time tracking, and enterprise-grade transaction integrity.
+<br>
 
-## Overview
+## Project Overview
 
-Swigato supports four distinct user roles, seamlessly orchestrated through a Realtime WebSocket architecture:
-* **Customers:** Browse restaurants, add to cart, checkout, and track orders in real-time.
-* **Restaurant Owners:** Manage menus, accept/reject orders, and track active fulfillment streams.
-* **Delivery Partners:** Auto-assigned to ready orders with a strict 1-active-order dispatch capacity.
-* **Administrators:** Observe the platform entirely passively via a realtime firehose multiplexer.
+Swigato is a complete, real-world food delivery ecosystem inspired by industry leaders like Swiggy, Zomato, Uber Eats, and DoorDash. Developed as a comprehensive backend engineering portfolio project, it maintains production-quality architecture, rigorous engineering standards, and a fully-featured React SPA frontend.
 
-## Features & Capabilities
+The objective of Swigato is to encapsulate the vast architectural complexity behind a modern food delivery platform. It elegantly handles four distinct user roles, resilient state-machine-driven order fulfillment, transactional delivery mapping, mock payment webhooks, and Role-Based Access Control (RBAC).
 
-### Architectural Highlights
-* **Modular Monolith**: Clean separation of Domain Services, Repositories, and the API layer.
-* **Transaction Integrity**: Built-in row-level locking (`FOR UPDATE`, `FOR UPDATE SKIP LOCKED`) ensures zero state-machine corruption, no lost updates, and prevents double-assignment of delivery partners.
-* **Zero N+1 Queries**: SQLAlchemy `selectinload` efficiently eager-loads deep relationships without degrading DB performance.
-* **Test Infrastructure**: Comprehensive `pytest` infrastructure utilizing independent asynchronous database session factories to accurately validate concurrency and locks.
+---
 
-### Realtime Engine
-* **Push-Based**: 100% push-based realtime architecture (0% polling overhead).
-* **Decoupled EventBus**: Business logic safely publishes post-commit domain events completely agnostic of the transport layer.
-* **Multi-Tenant Routing**: Strict server-authoritative routing (`customer:{id}`, `restaurant:{id}`, `admin:system`). Clients cannot subscribe to arbitrary topics.
-* **React Query Integration**: Realtime signals transparently instruct TanStack Query to refetch relevant queries or aggressively invalidate local cache.
-* **Self-Healing WebSockets**: Automatic pruning of stale connections and intelligent React Query refetches when the browser regains connectivity.
+## Architecture Overview
+
+Swigato is built as a robust modular monolith, specifically architected to facilitate a seamless transition to microservices if needed.
+
+### Backend Layering Strategy:
+1. **API / Router Layer:** Dedicated strictly to HTTP lifecycle, validation, and request/response mapping.
+2. **Service Layer:** Centralizes business rules, logic mapping, external API workflows, and state transitions.
+3. **Repository Layer:** Abstracted data access patterns for seamless DB interactions.
+4. **Database & Infrastructure Layer:** PostgreSQL for relational integrity, PostGIS for location logic, and Redis for volatile caching/real-time tracking.
+
+### Security First:
+- Argon2 Password Hashing
+- JWT Access & Refresh Token Rotation
+- Soft-Delete Entity Management
+- Strict Database Transaction Management (`with_for_update` row locks to prevent race conditions during order acceptance)
+
+---
+
+## Features by Domain
+
+### 🍔 Customer
+- **Authentication & Profiles:** JWT-based login, password reset flow, and secure session management.
+- **Address Management:** CRUD for multiple delivery addresses with geospatial tracking.
+- **Discovery:** Browse active restaurants, explore menus, and filter by dietary tags (Veg/Non-Veg).
+- **Cart & Checkout:** Persistent cart logic enforcing single-restaurant constraint.
+- **Real-Time Tracking:** Track active orders across state transitions (Placed → Accepted → Preparing → Picked Up → Delivered).
+- **Reviews:** Submit restaurant reviews after order delivery.
+
+### 🏪 Restaurant Owner
+- **Onboarding:** Automated registration and profile management requiring admin approval.
+- **Menu Management:** Complete CRUD interface for defining Categories, Menu Items, and toggling live availability.
+- **Order Fulfillment:** Live dashboard to Accept/Reject incoming orders, mark as Preparing, and dispatch as Ready for Pickup.
+- **Reviews Dashboard:** View and respond to customer reviews.
+
+### 🛵 Delivery Partner
+- **Fleet Onboarding:** Registration via vehicle type and automated dispatch verification.
+- **Availability Matrix:** Real-time Online/Offline toggle.
+- **Order Assignment:** Smart backend dispatching that allocates orders and calculates delivery fee commissions on the fly.
+- **Fulfillment Workflow:** Transaction-safe workflow to Accept, Pickup, Navigate, and Mark Delivered.
+- **Earnings Tracker:** Live dashboard aggregating lifetime deliveries and payouts.
+
+### 🛡️ Admin
+- **Ecosystem Moderation:** Dashboard to audit, approve, or suspend Restaurants and Delivery Partners.
+- **System Logs:** Read-only access to global Order states and Payment logs.
+- **Review Moderation:** Inspect and moderate customer reviews across the platform.
+
+---
 
 ## Tech Stack
 
 ### Backend
-* **Python 3.10+ / FastAPI**
-* **Async SQLAlchemy 2.0**
-* **PostgreSQL**
-* **Pytest & Pytest-Asyncio**
+- **Core:** Python 3.12+, FastAPI
+- **Database ORM:** SQLAlchemy 2.x (Async)
+- **Migrations:** Alembic
+- **Databases:** PostgreSQL (Primary), Redis (Caching)
+- **Data Validation:** Pydantic v2
+- **Auth:** JWT, Argon2 (pwdlib)
 
 ### Frontend
-* **React 19 / Vite**
-* **TanStack Query (React Query v5)**
-* **Tailwind CSS**
-* **React Router v6**
+- **Core:** React 19, Vite 8
+- **Routing:** React Router v7
+- **Server State:** TanStack React Query v5
+- **Styling:** Tailwind CSS v3
+- **HTTP Client:** Axios (interceptors for JWT refresh rotation)
+- **Icons:** Lucide React
 
-## Local Setup Instructions
+---
 
-### Prerequisites
-* Python 3.10+
-* Node.js 18+
-* PostgreSQL running locally
+## Repository Structure
 
-### Backend Setup
-1. Clone the repository and navigate to `backend/`.
-2. Create and activate a virtual environment: `python -m venv venv`
-3. Install dependencies: `pip install -r requirements.txt`
-4. Create a `.env` file containing:
-   ```env
-   DATABASE_URL=postgresql+asyncpg://user:password@localhost/swigato
-   TEST_DATABASE_URL=postgresql+asyncpg://user:password@localhost/swigato_test
-   SECRET_KEY=your_secret_key
+```text
+Swigato/
+├── backend/                  # FastAPI Backend Application
+│   ├── alembic/              # Database schema migrations
+│   ├── app/                  # Application Logic
+│   │   ├── api/v1/           # API Routers grouped by version/domain
+│   │   ├── core/             # Configuration, Security, Middlewares
+│   │   ├── models/           # SQLAlchemy ORM Models
+│   │   ├── repositories/     # Data Access Abstractions
+│   │   ├── schemas/          # Pydantic Request/Response Models
+│   │   └── services/         # Business Logic & Workflows
+│   └── requirements.txt      # Python dependencies
+│
+├── frontend/                 # React SPA (Vite)
+│   ├── src/
+│   │   ├── api/              # Axios client with JWT interceptor
+│   │   ├── services/         # Domain API service modules
+│   │   ├── hooks/            # React Query hooks (queries, mutations, realtime)
+│   │   ├── contexts/         # Auth, Cart, Toast contexts
+│   │   ├── pages/            # Role-segmented page components
+│   │   ├── layouts/          # Per-role layout wrappers
+│   │   ├── components/       # Shared UI components
+│   │   ├── routes/           # React Router config + route guards
+│   │   └── constants/        # Routes and roles constants
+│   ├── package.json          # Node dependencies
+│   └── vite.config.js        # Vite bundler configuration
+│
+└── docs/                     # Architectural Documentation
+    ├── PROJECT_CONTEXT.md
+    └── FRONTEND_CONTEXT.md
+```
+
+---
+
+## Backend Setup
+
+1. **Navigate to the backend directory:**
+   ```bash
+   cd backend
    ```
-5. Run tests: `pytest -v tests/`
-6. Start the server: `uvicorn app.main:app --reload`
-
-### Frontend Setup
-1. Navigate to `frontend/`.
-2. Install dependencies: `npm install`
-3. Create a `.env.local` file containing:
-   ```env
-   VITE_API_URL=http://localhost:8000/api/v1
-   VITE_WS_URL=ws://localhost:8000/api/v1/ws
+2. **Set up the virtual environment:**
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: .\venv\Scripts\activate
    ```
-4. Start the development server: `npm run dev`
+3. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. **Run migrations to set up your PostgreSQL DB:**
+   ```bash
+   alembic upgrade head
+   ```
+5. **Start the server:**
+   ```bash
+   uvicorn app.main:app --reload
+   ```
 
-## Current Project Status
-**Phase 12 Completed.**
-The project has established a highly stable Domain layer, Realtime layer, and Concurrency architecture. Structural testing and transaction locks protect the platform under high load. The next focus (Phase 13) shifts back to the Frontend to harden the User Experience, error boundaries, and loading states.
+---
+
+## Frontend Setup
+
+1. **Navigate to the frontend directory:**
+   ```bash
+   cd frontend
+   ```
+2. **Install Node modules:**
+   ```bash
+   npm install
+   ```
+3. **Start the Vite dev server:**
+   ```bash
+   npm run dev
+   ```
+4. The web app will be available at `http://localhost:5173`.
+
+---
+
+## Environment Variables
+
+Create `.env` files in both backend and frontend roots using the provided examples.
+
+**Backend (`backend/.env`):**
+```env
+DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/swigato
+SECRET_KEY=your_super_secret_jwt_key
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+```
+
+**Frontend (`frontend/.env.local`):**
+```env
+VITE_API_URL=http://127.0.0.1:8000
+```
+
+---
+
+## API Documentation
+
+FastAPI dynamically generates comprehensive documentation. Once the backend server is running, navigate to:
+- **Swagger UI:** `http://127.0.0.1:8000/docs`
+- **ReDoc:** `http://127.0.0.1:8000/redoc`
+
+All endpoints require authorization context enforced by FastAPI dependencies depending on the user role.
+
+---
+
+## Delivery Workflow
+
+Swigato handles delivery dispatch robustly:
+1. Restaurant marks an order as `READY_FOR_PICKUP`.
+2. Backend triggers `auto_assign_order` scanning for an online, available delivery partner.
+3. System applies explicit `with_for_update()` transactional locking to guarantee one-to-one assignment.
+4. Earning is calculated securely on the server-side.
+5. The assigned partner must `accept_order` explicitly. If rejected, the system falls back to recalculating dispatch.
+6. The state machine enforces progression: `ACCEPTED` → `PICKED_UP` → `IN_TRANSIT` → `DELIVERED`.
+
+---
+
+## Payment Simulation Architecture
+
+To prevent locking the UI behind actual credit card payments, Swigato simulates a modern asynchronous Payment Gateway Flow (similar to Stripe/Razorpay):
+1. **Checkout:** Frontend hits `POST /api/v1/payments/orders/{id}/initialize` to generate a secure transaction intent.
+2. **Payment Form:** The user submits mock card details.
+3. **Webhook Callback:** An idempotent webhook securely notifies the backend that the transaction succeeded, automatically progressing the order from `AWAITING_PAYMENT` to `PLACED`.
+
+---
+
+## Current Development Status
+
+The foundational milestones have been successfully completed:
+- [x] Phase 1 & 2: Auth, RBAC, Profile & Addresses
+- [x] Phase 3 & 4: Restaurant Lifecycle & Catalog/Menu DB
+- [x] Phase 5: Stateful Cart system with constraints
+- [x] Phase 6: Core Order Management System
+- [x] Phase 7: Payment Intent & Webhook simulation
+- [x] Phase 8: Delivery Partner fleet mapping & state tracking
+- [x] Phase 9 (Partial): Reviews backend & frontend integration
+
+**Checkpoint: React Frontend Migration complete.** The full React SPA covers all implemented backend domains — Auth, Restaurants, Menus, Cart, Orders, Payments, Delivery, and Reviews.
+
+---
+
+## Upcoming Phases
+
+- **Phase 9 (remaining):** Coupons & Notifications
+- **Phase 10:** Realtime Infrastructure (WebSockets / SSE for live order tracking)
+- **Phase 11:** Algorithmic Search, Analytics Engine, and System Observability/Logging
+
+---
+
+## License
+
+This project is open-source and available under the [MIT License](LICENSE).
