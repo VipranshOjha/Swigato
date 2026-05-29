@@ -1,427 +1,92 @@
-# PROJECT_CONTEXT.md
+# Project Context: Swigato
 
-# Swigato
+## 1. System Architecture
+Swigato is built as a **Modular Monolith**. It physically deploys as a single application unit but is logically partitioned into distinct domains (Order, Delivery, Owner, Auth). 
 
-## Project Overview
+**Flow:** Request -> FastAPI Router -> Domain Service -> Repository -> Database.
 
-Swigato is a production-grade food delivery platform inspired by Swiggy, Zomato, Uber Eats, and DoorDash.
+## 2. Domain Model
+* **User**: Base identity, controls RBAC (Customer, Owner, Rider, Admin).
+* **Restaurant / Menu**: Owned by `RESTAURANT_OWNER`.
+* **Cart / CartItem**: Ephemeral staging ground for order creation.
+* **Order / OrderItem**: The central transactional entity of the platform.
+* **DeliveryPartnerProfile**: Controls rider state (online/suspended) and tracks capacity.
 
-The goal is to build a complete real-world food delivery ecosystem consisting of:
+## 3. Order State Machine
+The Order lifecycle strictly follows these allowed transitions:
+`PENDING` -> `ACCEPTED` / `REJECTED` / `CANCELLED`
+`ACCEPTED` -> `PREPARING`
+`PREPARING` -> `READY_FOR_PICKUP`
+`READY_FOR_PICKUP` -> `RIDER_ASSIGNED`
+`RIDER_ASSIGNED` -> `PICKED_UP`
+`PICKED_UP` -> `IN_TRANSIT`
+`IN_TRANSIT` -> `DELIVERED`
 
-- Customers
-- Restaurant Owners
-- Delivery Partners
-- Administrators
+## 4. Delivery State Machine
+Riders are governed by a **strict 1-active-order capacity model**.
+A rider is eligible for `auto_assign_order` only if:
+- `is_online == True`
+- `is_suspended == False`
+- Active orders (`RIDER_ASSIGNED`, `PICKED_UP`, `IN_TRANSIT`) == 0.
 
-This project is being developed primarily as a backend engineering portfolio project and learning platform, while maintaining production-quality architecture and engineering standards.
+## 5. Repository Pattern
+Data access is entirely encapsulated inside the `repositories/` directory.
+- Repositories handle all SQLAlchemy queries, `.options(selectinload())` relationship loading, and `with_for_update()` locking semantics.
 
-The objective is not merely to clone Swiggy's UI but to understand and implement the complete backend architecture behind a modern food delivery platform.
+## 6. Service Layer Rules
+Business logic lives exclusively in the `services/` directory.
+- Services never execute raw SQL.
+- Services perform permission checks (`PermissionDeniedError`) and state validations (`InvalidOrderStateTransitionError`).
+- Services mutate state through Repositories, execute `commit()`, and *then* trigger the `EventBus`.
 
----
+## 7. Realtime Architecture
+Swigato uses a **Push-Based Realtime Model**.
+WebSockets are completely passive (read-only for clients). All state-mutations must occur via standard REST HTTP endpoints. This prevents duplicating auth/business logic into WebSocket handlers.
 
-# Long-Term Vision
+## 8. EventBus Architecture
+The `InMemoryEventBus` decouples domain services from network transports.
+Services invoke `event_bus.safe_publish(tenant_scope, envelope)`. The Bus routes the event into an asynchronous queue, where the `WebSocketManager` consumes it and broadcasts it down to connected, authenticated browser clients.
 
-Swigato should eventually support:
+## 9. WebSocket Routing Model
+Tenant Isolation is **Server-Authoritative**.
+- A customer automatically joins `customer:{user_id}` during handshake.
+- A restaurant owner joins `restaurant:{restaurant_id}`.
+- Admins join the `admin:system` firehose.
+Clients are blocked from issuing arbitrary `SUBSCRIBE` commands.
 
-- User registration and authentication
-- Role-based access control
-- Restaurant onboarding
-- Menu management
-- Cart management
-- Order placement
-- Payment processing
-- Coupon engine
-- Delivery partner management
-- Real-time order tracking
-- Notifications
-- Search
-- Analytics
-- Admin dashboard
-- Review and rating systems
+## 10. React Query Integration
+The frontend utilizes `TanStack Query`. When a realtime event is received via WebSocket, the client simply invokes `queryClient.invalidateQueries({ queryKey })`. This forces the browser to silently refetch the active orders in the background, combining the speed of push-events with the absolute safety of REST GET payloads.
 
-The architecture should remain scalable enough to later evolve from a modular monolith into microservices if desired.
+## 11. Transaction Locking Strategy
+Phase 11 introduced essential concurrency controls to prevent race conditions:
+* **`get_cart_for_update` (FOR UPDATE):** Prevents the Double-Checkout cart race.
+* **`get_by_id_for_update` (FOR UPDATE):** Forces strict serialization on all Order state transitions (e.g., Accept vs Cancel).
+* **`find_available_partner` (FOR UPDATE SKIP LOCKED):** Allows concurrent dispatch algorithms to instantly bypass locked riders, preventing double-assignments without causing queue blocking.
 
----
+## 12. Testing Architecture
+Phase 12 established a robust `pytest` and `pytest-asyncio` foundation:
+* **Integration Tests:** Use a shared `db_session` fixture wrapped in a ROLLBACK block for fast, clean business logic validation.
+* **Concurrency Tests:** Use a `session_factory` to spin up independent database connection pools inside `asyncio.gather()` loops, actively verifying that the row-level locks successfully serialize conflicting transitions (1 success, 1 failure).
 
-# Development Philosophy
+## 13. Current Technical Debt
+* **EventBus Scaling:** The `InMemoryEventBus` will fail to distribute events properly when horizontally scaling multiple FastAPI workers. Migration to a `RedisEventBus` with distributed sequence generation is required.
+* **Optimistic Frontend Updates:** WebSockets currently trigger React Query refetches (Thundering Herd risk). Payload enrichment could allow `queryClient.setQueryData` for HTTP-free UI updates.
+* **`useDeliveryRealtime.js`:** A hollowed-out wrapper hook that remains from the Phase 10F polling removal.
 
-Priority order:
-
-1. Correctness
-2. Security
-3. Maintainability
-4. Scalability
-5. Performance
-6. Developer Experience
-
-Code should favor readability and explicitness over cleverness.
-
-Avoid premature optimization.
-
-Build features completely before optimizing them.
-
-Every major feature should have:
-
-- API schemas
-- Validation
-- Business logic
-- Error handling
-- Authorization
-- Tests
-- Documentation
-
----
-
-# Tech Stack
-
-## Backend
-
-- Python 3.12+
-- FastAPI
-- SQLAlchemy 2.x (Async)
-- Pydantic v2
-- Alembic
-- PostgreSQL
-- Redis
-
-## Frontend
-
-- React 19 (with Vite 8)
-- React Router v7
-- TanStack React Query v5
-- Tailwind CSS v3
-- Axios (with interceptors for token refresh rotation)
-- Lucide React (icon set)
-
-## Authentication
-
-- JWT Access Tokens
-- JWT Refresh Tokens
-- Argon2 password hashing via pwdlib
-- Role Based Access Control (RBAC)
-
-## Database
-
-Primary Database:
-
-- PostgreSQL
-
-Extensions:
-
-- PostGIS
-
-Caching & Realtime:
-
-- Redis
+## 14. Roadmap
+* **Phase 13:** Frontend UX Hardening (Loading states, Empty States, Error Boundaries).
+* **Phase 14:** Observability & Telemetry (Prometheus Metrics).
+* **Phase 15:** Redis Pub/Sub Migration for Horizontal Scale.
 
 ---
 
-# Current Architecture
-
-Architecture follows:
-
-API Layer
-→ Service Layer
-→ Repository Layer
-→ Database Layer
-
-Rules:
-
-- Routers contain HTTP logic only
-- Services contain business logic
-- Repositories contain database logic only
-- Models represent persistence
-- Schemas represent API contracts
-
-Business logic should never live in routers.
-
-Database queries should never live directly in routers.
-
----
-
-# Roles
-
-System supports multiple roles:
-
-- customer
-- restaurant_owner
-- delivery_partner
-- admin
-- super_admin
-
-Users may hold multiple roles.
-
-RBAC is enforced through dependencies and permissions.
-
----
-
-# Database Design
-
-Database schema was designed manually before implementation.
-
-Core domains:
-
-Authentication:
-- users
-- roles
-- user_roles
-- refresh_tokens
-- email_verifications
-- password_resets
-
-Restaurant:
-- restaurants
-- restaurant_categories
-- menu_categories
-- menu_items
-
-Cart:
-- carts
-- cart_items
-
-Orders:
-- orders
-- order_items
-- order_status_history
-
-Payments:
-- payments
-- refunds
-
-Delivery:
-- delivery_partner_profiles
-- delivery_location_logs
-
-Reviews:
-- reviews
-
-Coupons:
-- coupons
-- order_coupons
-
-Addresses:
-- user_addresses
-
-Additional supporting tables may be added if they improve architecture.
-
----
-
-# External Services
-
-Current decisions:
-
-Payments:
-- Razorpay simulation (mock flow, webhook simulation)
-
-Email:
-- AWS SES (planned)
-
-Storage:
-- Cloudflare R2 preferred
-- S3-compatible abstraction layer
-
-Location:
-- Redis Geo for realtime tracking
-- PostgreSQL/PostGIS for historical persistence
-
-Delivery:
-- Cash on Delivery supported
-
----
-
-# Security Standards
-
-Mandatory requirements:
-
-- Password hashing using Argon2
-- JWT rotation
-- Refresh token storage
-- Rate limiting
-- Input validation
-- CORS protection
-- Audit logging
-- Permission checks
-- Soft deletes where appropriate
-
-Never store plaintext passwords.
-
-Never expose internal errors to clients.
-
-Never trust frontend validation.
-
----
-
-# API Standards
-
-All APIs should:
-
-- Use versioned routes (/api/v1)
-- Return structured JSON responses
-- Use proper HTTP status codes
-- Use pagination where needed
-- Use consistent naming conventions
-- Include OpenAPI documentation
-
----
-
-# Frontend
-
-The frontend is a React SPA located at `frontend/` (previously `frontend-react/`).
-
-Stack: React 19, Vite 8, React Router v7, TanStack React Query v5, Tailwind CSS v3.
-
-Architecture:
-- `src/api/` — Axios client with interceptor-based JWT refresh
-- `src/services/` — Domain service modules (auth, cart, order, payment, etc.)
-- `src/hooks/queries/` — React Query hooks for data fetching per domain
-- `src/hooks/mutations/` — React Query mutation hooks for write operations
-- `src/hooks/realtime/` — Polling-based realtime hooks
-- `src/contexts/` — React Contexts (Auth, Cart, Toast)
-- `src/pages/` — Role-segmented page components (customer, owner, delivery, admin, auth, error)
-- `src/layouts/` — Per-role layout wrappers with navigation
-- `src/components/` — Shared UI components (cards, modals, skeletons, etc.)
-- `src/routes/` — React Router configuration with role-based guards (ProtectedRoute, RoleRoute, PublicRoute)
-- `src/constants/` — Routes and roles constants
-- `src/lib/` — React Query client and key factories
-
-Frontend communicates exclusively through backend APIs.
-
-No mock data should remain once backend endpoints exist.
-
----
-
-# Current Progress
-
-Completed:
-
-✅ Project setup
-✅ PostgreSQL configuration
-✅ Redis configuration
-✅ Alembic migrations
-✅ Authentication domain
-✅ Registration
-✅ Login
-✅ Refresh tokens
-✅ Password reset flows
-✅ Email verification flows
-✅ RBAC foundation
-✅ Swagger documentation
-✅ User Profile Management
-✅ Address Management
-✅ Restaurant Domain & DB Schema (Phase 3)
-✅ Restaurant Onboarding & Owner Dashboard
-✅ Admin Restaurant Approval & Suspension
-✅ Public Restaurant Search & Discovery APIs
-✅ Menu Management Domain (Phase 4): Menu Category & Menu Item DB models, CRUD schemas, and API endpoints (owner and public)
-✅ Cart Management Domain & DB Schema (Phase 5): Cart and CartItem models, repositories, schemas, and business logic
-✅ Cart API Endpoints: Get cart, add/update/remove items, clear cart (Phase 5 API)
-✅ Single-restaurant enforcement in Cart business rules (Phase 5 Business Logic)
-✅ Order Management Domain (Phase 6): Order, OrderItem, and OrderStatusHistory DB models, CRUD schemas, repositories, and services
-✅ Customer checkout order placement, cancellation, and tracking API endpoints (Phase 6 Customer APIs)
-✅ Owner Order Management dashboard and order action APIs: accept, reject, mark preparation/ready (Phase 6 Owner APIs)
-✅ Admin system-wide order audit logs and detailed listing APIs (Phase 6 Admin APIs)
-✅ Payments Domain & DB Schema (Phase 7): Payment and Refund models, repositories, schemas, and service layers
-✅ Payment checkout integration: Payment initialization and mock Razorpay payment processing (Phase 7 APIs)
-✅ Idempotent payment webhook receiver: Razorpay event logging and async order state transitioning (Phase 7 Webhook)
-✅ Delivery Partner Domain & DB Schema (Phase 8): DeliveryPartnerProfile and DeliveryLocationLog models, repositories, schemas, and service layers
-✅ Delivery partner onboarding & approval workflow by Admin (Phase 8 APIs)
-✅ Delivery partner online/offline state, location logging, and automatic order assignment matching (Phase 8 Backend Logic)
-✅ Delivery dashboard and action status toggling: picked up, delivered (Phase 8 Delivery APIs)
-✅ Reviews Domain (Phase 9 - Partial): Review model, repository, schemas, and API endpoints (customer submit, owner read, admin moderation)
-✅ React Frontend Migration: Full SPA built with React 19, Vite, React Router v7, TanStack React Query v5, and Tailwind CSS v3
-✅ React Frontend covers all backend domains: Auth, Profile, Addresses, Restaurants, Menus, Cart, Orders, Payments, Delivery, Reviews
-✅ Admin Dashboard: Full admin panel (restaurants, orders, payments, delivery partners, reviews)
-✅ Owner Dashboard: Full owner panel (restaurant management, menu management, order fulfillment, reviews)
-✅ Delivery Dashboard: Full delivery partner portal (availability toggle, order acceptance, delivery workflow)
-✅ Customer Flow: Full customer journey (browse, cart, checkout, payment, order tracking)
-
-Currently Working On:
-
-🔄 Coupons & Notifications (Phase 9 remaining)
-
-Next Phase:
-
-➡ Realtime Infrastructure (WebSockets / SSE for live order tracking)
-➡ Search, Analytics, and Observability (Phase 10)
-
----
-
-# Future Roadmap
-
-✅ Phase 1: Authentication & Foundation
-✅ Phase 2: Profiles & Addresses
-✅ Phase 3: Restaurants
-✅ Phase 4: Menus
-✅ Phase 5: Cart
-✅ Phase 6: Orders
-✅ Phase 7: Payments
-✅ Phase 8: Delivery
-🔄 Phase 9: Reviews, Coupons, Notifications (Reviews done; Coupons & Notifications pending)
-
-⬜ Phase 10: Realtime Infrastructure (WebSockets/SSE)
-⬜ Phase 11: Search, Analytics, Observability
-
----
-
-# Current Application State
-
-Backend:
-✅ Running locally
-✅ PostgreSQL connected
-✅ Redis connected
-✅ Alembic migrations working
-✅ OpenAPI documentation available
-✅ Restaurant endpoints active (Owner, Admin, Public)
-✅ Menu endpoints active (Owner, Public)
-✅ Cart endpoints active (Customer)
-✅ Order endpoints active (Customer, Owner, Admin)
-✅ Payment endpoints and webhooks active (Customer, Admin)
-✅ Delivery & assignment matching endpoints active (Delivery Partner, Admin)
-✅ Review endpoints active (Customer submit, Owner read, Admin moderation)
-
-Frontend (React SPA at `frontend/`):
-✅ Running locally via `npm run dev`
-✅ Authentication integrated (login, register, JWT refresh)
-✅ Profile management integrated
-✅ Address management integrated
-✅ Protected routes and role-based routing enabled
-✅ Restaurant Onboarding & Dashboards integrated
-✅ Menu listing and item availability management integrated
-✅ Cart view, item addition, quantity updates, and cart persistence integrated
-✅ Checkout, order tracking, and order history panels integrated
-✅ Payment integration and admin transaction log panel integrated
-✅ Delivery dashboard, order assignment processing, and Admin delivery overview integrated
-✅ Reviews: Customer submit, Owner review listing, Admin moderation panel integrated
-
-Testing:
-✅ Authentication flow verified
-✅ Profile updates verified
-✅ Address CRUD verified
-✅ Default address logic verified
-✅ Restaurant creation, submission, approval, and search verified
-✅ Menu CRUD and item availability toggle verified
-✅ Cart CRUD and single-restaurant enforcement verified
-✅ Order status transitioning, customer/owner dashboard permissions verified
-✅ Payment initialization and idempotent webhook transaction flows verified
-✅ Delivery partner registration, assignment updates, status transitions, and location log workflows verified
-
----
-
-# AI Assistant Instructions
-
-When making changes:
-
-1. Preserve architecture boundaries.
-2. Follow existing patterns.
-3. Prefer consistency over novelty.
-4. Update tests when functionality changes.
-5. Generate Alembic migrations when schema changes.
-6. Never remove security features.
-7. Never bypass authorization.
-8. Keep code production-ready.
-9. Ask before introducing major architectural changes.
-10. If a better design exists, explain it before implementing.
-
-When uncertain:
-
-Choose the solution that would be used in a real production system serving thousands of users.
+## ARCHITECTURAL INVARIANTS
+*These are non-negotiable engineering rules.*
+
+1. **Services own business logic.** Endpoints must remain thin.
+2. **Repositories own SQL.** Services must never invoke raw `select()` or `with_for_update()`.
+3. **Events publish AFTER commit.** Never publish an event for a state that hasn't successfully hit the database.
+4. **WebSockets are read-only.** Mutations must use HTTP.
+5. **React Query is the Source of Truth.** Realtime events trigger invalidations, not manual state array manipulation.
+6. **Protected topics are server-authoritative.** The server dictates what the client listens to based on their JWT.
+7. **State-machine mutations use row locks.** Any state transition must wrap the entity in `FOR UPDATE`.

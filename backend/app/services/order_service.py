@@ -25,6 +25,8 @@ from app.repositories.order_repo import (
     OrderStatusHistoryRepository,
 )
 from app.schemas.order import OrderCreate, OrderDetailResponse, OrderResponse
+from app.realtime.events import EventEnvelope, EventType
+from app.realtime.event_bus import event_bus
 
 
 class OrderService:
@@ -38,8 +40,11 @@ class OrderService:
 
     # Internal Helpers
 
-    async def _get_order(self, order_id: uuid.UUID) -> Order:
-        order = await self.order_repo.get_by_id(order_id)
+    async def _get_order(self, order_id: uuid.UUID, for_update: bool = False) -> Order:
+        if for_update:
+            order = await self.order_repo.get_by_id_for_update(order_id)
+        else:
+            order = await self.order_repo.get_by_id(order_id)
         if not order:
             raise OrderNotFoundError()
         return order
@@ -92,7 +97,7 @@ class OrderService:
 
     async def create_order(self, customer_id: int, payload: OrderCreate) -> OrderResponse:
         """Create an order from the user's cart."""
-        cart = await self.cart_repo.get_cart_by_user_id(customer_id)
+        cart = await self.cart_repo.get_cart_for_update(customer_id)
         if not cart or not cart.items:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail="Cart is empty."
@@ -171,6 +176,19 @@ class OrderService:
         await self.cart_repo.clear_cart(cart.id)
         await self.session.commit()
 
+        scopes = [f"restaurant:{order.restaurant_id}", f"customer:{customer_id}"]
+        for scope in scopes:
+            await event_bus.safe_publish(
+                scope,
+                EventEnvelope(
+                    event_type=EventType.ORDER_CREATED,
+                    sequence_number=0,
+                    actor_id=str(customer_id),
+                    tenant_scope=scope,
+                    payload={"order_id": str(order.id), "restaurant_id": str(order.restaurant_id), "status": order.status}
+                )
+            )
+
         # Reload fully
         order = await self._get_order(order.id)
         return self._build_response(order)
@@ -192,7 +210,7 @@ class OrderService:
         return self._build_detail_response(order)
 
     async def cancel_order(self, customer_id: int, order_id: uuid.UUID) -> OrderDetailResponse:
-        order = await self._get_order(order_id)
+        order = await self._get_order(order_id, for_update=True)
         if order.customer_id != customer_id:
             raise PermissionDeniedError()
         
@@ -207,7 +225,7 @@ class OrderService:
     # Owner Actions
 
     async def owner_accept_order(self, owner_id: int, order_id: uuid.UUID) -> OrderDetailResponse:
-        order = await self._get_order(order_id)
+        order = await self._get_order(order_id, for_update=True)
         if order.restaurant.owner_id != owner_id:
             raise PermissionDeniedError()
 
@@ -215,13 +233,26 @@ class OrderService:
             order, OrderStatus.ACCEPTED, changed_by=owner_id
         )
         await self.session.commit()
+        
+        scopes = [f"restaurant:{order.restaurant_id}", f"customer:{order.customer_id}"]
+        for scope in scopes:
+            await event_bus.safe_publish(
+                scope,
+                EventEnvelope(
+                    event_type=EventType.ORDER_ACCEPTED,
+                    sequence_number=0,
+                    actor_id=str(owner_id),
+                    tenant_scope=scope,
+                    payload={"order_id": str(order.id), "restaurant_id": str(order.restaurant_id), "status": order.status}
+                )
+            )
         await self.session.refresh(order, ["status_history", "updated_at"])
         return self._build_detail_response(order)
 
     async def owner_reject_order(
         self, owner_id: int, order_id: uuid.UUID, reason: str
     ) -> OrderDetailResponse:
-        order = await self._get_order(order_id)
+        order = await self._get_order(order_id, for_update=True)
         if order.restaurant.owner_id != owner_id:
             raise PermissionDeniedError()
 
@@ -233,19 +264,53 @@ class OrderService:
             rejection_reason=reason,
         )
         await self.session.commit()
+        
+        scopes = [f"restaurant:{order.restaurant_id}", f"customer:{order.customer_id}"]
+        for scope in scopes:
+            await event_bus.safe_publish(
+                scope,
+                EventEnvelope(
+                    event_type=EventType.ORDER_REJECTED,
+                    sequence_number=0,
+                    actor_id=str(owner_id),
+                    tenant_scope=scope,
+                    payload={"order_id": str(order.id), "restaurant_id": str(order.restaurant_id), "status": order.status}
+                )
+            )
+            
         await self.session.refresh(order, ["status_history", "updated_at"])
         return self._build_detail_response(order)
 
     async def owner_update_status(
         self, owner_id: int, order_id: uuid.UUID, new_status: OrderStatus
     ) -> OrderDetailResponse:
-        order = await self._get_order(order_id)
+        order = await self._get_order(order_id, for_update=True)
         if order.restaurant.owner_id != owner_id:
             raise PermissionDeniedError()
         
         # Only certain transitions are typically driven by the owner (e.g. PREPARING, READY_FOR_PICKUP)
         order = await self._transition_state(order, new_status, changed_by=owner_id)
         await self.session.commit()
+
+        event_type = None
+        if new_status == OrderStatus.PREPARING:
+            event_type = EventType.ORDER_PREPARING
+        elif new_status == OrderStatus.READY_FOR_PICKUP:
+            event_type = EventType.ORDER_READY_FOR_PICKUP
+            
+        if event_type:
+            scopes = [f"restaurant:{order.restaurant_id}", f"customer:{order.customer_id}"]
+            for scope in scopes:
+                await event_bus.safe_publish(
+                    scope,
+                    EventEnvelope(
+                        event_type=event_type,
+                        sequence_number=0,
+                        actor_id=str(owner_id),
+                        tenant_scope=scope,
+                        payload={"order_id": str(order.id), "restaurant_id": str(order.restaurant_id), "status": order.status}
+                    )
+                )
         
         # Auto-assign a rider if the order is ready for pickup
         if new_status == OrderStatus.READY_FOR_PICKUP:

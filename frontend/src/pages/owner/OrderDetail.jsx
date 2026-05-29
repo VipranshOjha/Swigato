@@ -8,6 +8,9 @@ import { StatusBadge } from '../../components/common/StatusBadge';
 import { ORDER_STATUS } from '../../utils/order.utils';
 import { useToast } from '../../contexts/ToastContext';
 import { ArrowLeft, User, Phone, MapPin } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { useRealtime } from '../../hooks/useRealtime';
+import { queryKeys } from '../../lib/react-query/queryKeys';
 
 export const OrderDetail = () => {
     const { id } = useParams();
@@ -17,6 +20,18 @@ export const OrderDetail = () => {
     const acceptMutation = useAcceptOrderMutation();
     const rejectMutation = useRejectOrderMutation();
     const statusMutation = useUpdateOrderStatusMutation();
+
+    const queryClient = useQueryClient();
+    
+    useRealtime(
+        order?.restaurant_id ? `restaurant:${order.restaurant_id}` : null,
+        ['ORDER_CREATED', 'ORDER_ACCEPTED', 'ORDER_PREPARING', 'ORDER_READY_FOR_PICKUP'],
+        (envelope) => {
+            if (envelope.payload?.order_id === order?.id) {
+                queryClient.invalidateQueries({ queryKey: queryKeys.owner.orders.detail(order.id) });
+            }
+        }
+    );
 
     const handleAction = async (action, payload = null) => {
         try {

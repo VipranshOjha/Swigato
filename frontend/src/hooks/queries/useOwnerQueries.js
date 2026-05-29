@@ -40,7 +40,6 @@ export const useOwnerOrders = (params = {}) => {
     return useQuery({
         queryKey: queryKeys.owner.orders.list(params),
         queryFn: ({ signal }) => ownerService.getOrders({ ...params, signal }),
-        refetchInterval: isActiveFilter ? 15000 : false,
     });
 };
 
@@ -49,10 +48,6 @@ export const useOwnerOrderDetail = (orderId) => {
         queryKey: queryKeys.owner.orders.detail(orderId),
         queryFn: () => ownerService.getOrderDetail(orderId),
         enabled: !!orderId,
-        refetchInterval: (query) => {
-            const status = query.state?.data?.status;
-            return (status && isOrderActive(status)) ? 15000 : false;
-        }
     });
 };
 

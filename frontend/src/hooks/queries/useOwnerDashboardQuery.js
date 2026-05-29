@@ -18,7 +18,6 @@ export const useOwnerDashboard = () => {
             {
                 queryKey: queryKeys.owner.orders.list({ page: 1, page_size: 100 }),
                 queryFn: () => ownerService.getOrders({ page: 1, page_size: 100 }),
-                refetchInterval: 60000, // Poll every 60s for dashboard freshness
             },
         ],
     });

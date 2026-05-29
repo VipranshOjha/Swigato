@@ -19,16 +19,6 @@ export const useOrderDetail = (id) => {
             const { default: apiClient } = await import('../../api/api.client');
             return apiClient.get(`/orders/${id}`);
         },
-        enabled: !!id,
-        // Optional polling if the order is active
-        refetchInterval: (query) => {
-            const status = query.state?.data?.status;
-            const isFinished = status === ORDER_STATUS.DELIVERED || 
-                               status === ORDER_STATUS.CANCELLED || 
-                               status === ORDER_STATUS.REJECTED;
-            
-            // Poll every 30s if active, otherwise stop polling
-            return (!isFinished && status) ? 30000 : false;
-        }
+        enabled: !!id
     });
 };

@@ -38,11 +38,6 @@ export const useDeliveryOrderDetail = (orderId, options = {}) => {
             const items = res?.items || res || [];
             return items.find(o => o.id === orderId) || null;
         }),
-        enabled: !!orderId,
-        refetchInterval: (query) => {
-            const status = query.state?.data?.status;
-            // 8s active polling
-            return (status && isDeliveryActive(status)) ? 8000 : false;
-        }
+        enabled: !!orderId
     });
 };

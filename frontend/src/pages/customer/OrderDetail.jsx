@@ -12,6 +12,10 @@ import { ReviewPromptModal } from '../../components/customer/ReviewPromptModal';
 import { ORDER_STATUS } from '../../utils/orderStatus.utils';
 import { ChevronLeft, Receipt, Bike, Star, AlertCircle } from 'lucide-react';
 import { ROUTES } from '../../constants/routes';
+import { useRealtime } from '../../hooks/useRealtime';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '../../lib/react-query/queryKeys';
+import { useAuth } from '../../contexts/AuthContext';
 
 export const OrderDetail = () => {
     const { id } = useParams();
@@ -24,6 +28,23 @@ export const OrderDetail = () => {
         refetch,
         isFetching
     } = useOrderTracking(id);
+
+    const { user } = useAuth();
+    const queryClient = useQueryClient();
+    
+    useRealtime(
+        user?.id ? `customer:${user.id}` : null,
+        [
+            'ORDER_CREATED', 'ORDER_ACCEPTED', 'ORDER_REJECTED', 
+            'ORDER_PREPARING', 'ORDER_READY_FOR_PICKUP', 
+            'ORDER_PICKED_UP', 'ORDER_IN_TRANSIT', 'ORDER_DELIVERED'
+        ],
+        (envelope) => {
+            if (envelope.payload?.order_id === id) {
+                queryClient.invalidateQueries({ queryKey: queryKeys.orders.detail(id) });
+            }
+        }
+    );
 
     if (isLoading) return <PageLoader text="Loading order details..." />;
     if (error) return (

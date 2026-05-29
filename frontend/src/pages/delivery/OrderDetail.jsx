@@ -1,6 +1,6 @@
 import React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { useDeliveryOrderDetail } from '../../hooks/queries/useDeliveryQueries';
+import { useDeliveryOrderDetail, useDeliveryProfile } from '../../hooks/queries/useDeliveryQueries';
 import { 
     useAcceptDeliveryMutation, 
     useRejectDeliveryMutation,
@@ -15,6 +15,9 @@ import { useToast } from '../../contexts/ToastContext';
 import { ArrowLeft, MapPin, Phone, User, Store, IndianRupee, Navigation } from 'lucide-react';
 import { ORDER_STATUS } from '../../utils/order.utils';
 import { isDeliveryFinal } from '../../utils/delivery.utils';
+import { useRealtime } from '../../hooks/useRealtime';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '../../lib/react-query/queryKeys';
 
 export const OrderDetail = () => {
     const { id } = useParams();
@@ -23,7 +26,18 @@ export const OrderDetail = () => {
     
     // Polls rapidly (8s) if order is active
     const { data: order, isLoading, error } = useDeliveryOrderDetail(id);
+    const { data: profile } = useDeliveryProfile();
+    const queryClient = useQueryClient();
     
+    useRealtime(
+        profile?.id ? `delivery_partner:${profile.id}` : null,
+        ['RIDER_ASSIGNED', 'ORDER_PICKED_UP', 'ORDER_IN_TRANSIT', 'ORDER_DELIVERED'],
+        (envelope) => {
+            if (envelope.payload?.order_id === id) {
+                queryClient.invalidateQueries({ queryKey: queryKeys.delivery.orders.detail(id) });
+            }
+        }
+    );
     const acceptMutation = useAcceptDeliveryMutation();
     const rejectMutation = useRejectDeliveryMutation();
     const pickupMutation = usePickupOrderMutation();
@@ -184,7 +198,7 @@ export const OrderDetail = () => {
             {!isFinal && (
                 <div className="fixed bottom-0 left-0 right-0 p-4 bg-surface-container-lowest border-t border-surface-container-high shadow-[0_-4px_10px_rgba(0,0,0,0.05)] z-40">
                     <div className="max-w-2xl mx-auto flex gap-3">
-                        {order.status === ORDER_STATUS.RIDER_ASSIGNED && (
+                        {order.status === ORDER_STATUS.RIDER_ASSIGNED && !order.rider_accepted_at && (
                             <>
                                 <button 
                                     disabled={isPending}
@@ -203,7 +217,7 @@ export const OrderDetail = () => {
                             </>
                         )}
                         
-                        {order.status === ORDER_STATUS.ACCEPTED && (
+                        {order.status === ORDER_STATUS.RIDER_ASSIGNED && order.rider_accepted_at && (
                             <button 
                                 disabled={isPending}
                                 onClick={() => handleAction('pickup')}

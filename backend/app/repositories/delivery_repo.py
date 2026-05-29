@@ -68,6 +68,7 @@ class DeliveryPartnerRepository:
         stmt = (
             stmt.order_by(DeliveryPartnerProfile.total_deliveries.asc())
             .limit(1)
+            .with_for_update(of=DeliveryPartnerProfile, skip_locked=True)
         )
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()

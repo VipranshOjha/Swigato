@@ -26,6 +26,20 @@ class CartRepository:
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
 
+    async def get_cart_for_update(self, user_id: int) -> Optional[Cart]:
+        """Fetch the active cart for a user with an exclusive row-level lock."""
+        stmt = (
+            select(Cart)
+            .where(Cart.user_id == user_id)
+            .with_for_update()
+            .options(
+                selectinload(Cart.restaurant),
+                selectinload(Cart.items).selectinload(CartItem.menu_item)
+            )
+        )
+        result = await self.session.execute(stmt)
+        return result.scalar_one_or_none()
+
     async def create_cart(self, user_id: int, restaurant_id: Optional[uuid.UUID] = None) -> Cart:
         """Create a new cart for a user."""
         cart = Cart(user_id=user_id, restaurant_id=restaurant_id)

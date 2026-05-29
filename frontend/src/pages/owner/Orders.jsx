@@ -6,6 +6,10 @@ import { OrderCard } from '../../components/owner/OrderCard';
 import { PageLoader } from '../../components/common/PageLoader';
 import { ErrorState } from '../../components/common/ErrorState';
 import { useToast } from '../../contexts/ToastContext';
+import { useQueryClient } from '@tanstack/react-query';
+import { useRealtime } from '../../hooks/useRealtime';
+import { queryKeys } from '../../lib/react-query/queryKeys';
+import { useMemo } from 'react';
 
 const TABS = [
     { id: 'active', label: 'Active', statuses: ['placed', 'accepted', 'preparing', 'ready_for_pickup', 'rider_assigned', 'picked_up', 'in_transit'] },
@@ -24,6 +28,13 @@ export const Orders = () => {
     const { data: ordersData, isLoading, error } = useOwnerOrders({ 
         page: 1, 
         page_size: 100 
+    });
+
+    const queryClient = useQueryClient();
+    const topics = useMemo(() => restaurants?.map(r => `restaurant:${r.id}`) || [], [restaurants]);
+    
+    useRealtime(topics, ['ORDER_CREATED', 'ORDER_ACCEPTED', 'ORDER_PREPARING', 'ORDER_READY_FOR_PICKUP'], () => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.owner.orders.lists() });
     });
 
     const acceptMutation = useAcceptOrderMutation();

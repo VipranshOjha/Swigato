@@ -126,10 +126,9 @@ class DeliveryService:
         import logging
         logger = logging.getLogger(__name__)
 
-        from sqlalchemy import select
-        from app.models.order import Order
-        stmt = select(Order).where(Order.id == order_id).with_for_update()
-        order = await self.session.scalar(stmt)
+        from app.repositories.order_repo import OrderRepository
+        order_repo = OrderRepository(self.session)
+        order = await order_repo.get_by_id_for_update(order_id)
         if not order or order.status != OrderStatus.READY_FOR_PICKUP or order.assigned_delivery_partner_id is not None:
             return False
 
@@ -153,6 +152,32 @@ class DeliveryService:
         logger.info(f"Assigned order {order.id} to partner {partner.id}")
         
         await self.session.commit()
+        
+        from app.realtime.event_bus import event_bus
+        from app.realtime.events import EventType, EventEnvelope
+        
+        tenant_scopes = [
+            f"delivery_partner:{partner.id}",
+            f"restaurant:{order.restaurant_id}"
+        ]
+        
+        for scope in tenant_scopes:
+            await event_bus.safe_publish(
+                scope,
+                EventEnvelope(
+                    event_type=EventType.RIDER_ASSIGNED,
+                    sequence_number=0,
+                    actor_id=None,
+                    tenant_scope=scope,
+                    payload={
+                        "order_id": str(order.id),
+                        "restaurant_id": str(order.restaurant_id),
+                        "assigned_delivery_partner_id": str(partner.id),
+                        "status": order.status
+                    }
+                )
+            )
+        
         return True
 
     async def get_assigned_orders(
@@ -191,18 +216,9 @@ class DeliveryService:
         if not profile:
             raise DeliveryPartnerNotFoundError()
             
-        from sqlalchemy import select
-        from app.models.order import Order, OrderItem
-        from sqlalchemy.orm import selectinload
-        
-        stmt = select(Order).options(
-            selectinload(Order.items).selectinload(OrderItem.menu_item),
-            selectinload(Order.restaurant),
-            selectinload(Order.customer),
-            selectinload(Order.delivery_address),
-            selectinload(Order.status_history),
-        ).where(Order.id == order_id).with_for_update()
-        order = await self.session.scalar(stmt)
+        from app.repositories.order_repo import OrderRepository
+        order_repo = OrderRepository(self.session)
+        order = await order_repo.get_by_id_for_update(order_id)
         
         if not order:
             raise OrderNotFoundError()
@@ -262,6 +278,33 @@ class DeliveryService:
             order, OrderStatus.PICKED_UP, changed_by=user_id
         )
         await self.session.commit()
+        
+        from app.realtime.event_bus import event_bus
+        from app.realtime.events import EventType, EventEnvelope
+        
+        tenant_scopes = [
+            f"delivery_partner:{profile.id}",
+            f"restaurant:{order.restaurant_id}",
+            f"customer:{order.customer_id}"
+        ]
+        
+        for scope in tenant_scopes:
+            await event_bus.safe_publish(
+                scope,
+                EventEnvelope(
+                    event_type=EventType.ORDER_PICKED_UP,
+                    sequence_number=0,
+                    actor_id=str(user_id),
+                    tenant_scope=scope,
+                    payload={
+                        "order_id": str(order.id),
+                        "restaurant_id": str(order.restaurant_id),
+                        "customer_id": str(order.customer_id),
+                        "status": order.status
+                    }
+                )
+            )
+        
         return OrderDetailResponse.model_validate(order)
 
     async def mark_in_transit(self, user_id: int, order_id: uuid.UUID) -> OrderDetailResponse:
@@ -270,6 +313,33 @@ class DeliveryService:
             order, OrderStatus.IN_TRANSIT, changed_by=user_id
         )
         await self.session.commit()
+        
+        from app.realtime.event_bus import event_bus
+        from app.realtime.events import EventType, EventEnvelope
+        
+        tenant_scopes = [
+            f"delivery_partner:{profile.id}",
+            f"restaurant:{order.restaurant_id}",
+            f"customer:{order.customer_id}"
+        ]
+        
+        for scope in tenant_scopes:
+            await event_bus.safe_publish(
+                scope,
+                EventEnvelope(
+                    event_type=EventType.ORDER_IN_TRANSIT,
+                    sequence_number=0,
+                    actor_id=str(user_id),
+                    tenant_scope=scope,
+                    payload={
+                        "order_id": str(order.id),
+                        "restaurant_id": str(order.restaurant_id),
+                        "customer_id": str(order.customer_id),
+                        "status": order.status
+                    }
+                )
+            )
+        
         return OrderDetailResponse.model_validate(order)
 
     async def mark_delivered(self, user_id: int, order_id: uuid.UUID) -> OrderDetailResponse:
@@ -288,6 +358,33 @@ class DeliveryService:
         )
         
         await self.session.commit()
+        
+        from app.realtime.event_bus import event_bus
+        from app.realtime.events import EventType, EventEnvelope
+        
+        tenant_scopes = [
+            f"delivery_partner:{profile.id}",
+            f"restaurant:{order.restaurant_id}",
+            f"customer:{order.customer_id}"
+        ]
+        
+        for scope in tenant_scopes:
+            await event_bus.safe_publish(
+                scope,
+                EventEnvelope(
+                    event_type=EventType.ORDER_DELIVERED,
+                    sequence_number=0,
+                    actor_id=str(user_id),
+                    tenant_scope=scope,
+                    payload={
+                        "order_id": str(order.id),
+                        "restaurant_id": str(order.restaurant_id),
+                        "customer_id": str(order.customer_id),
+                        "status": order.status
+                    }
+                )
+            )
+        
         return OrderDetailResponse.model_validate(order)
 
     # Admin Actions

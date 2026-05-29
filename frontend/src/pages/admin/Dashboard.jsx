@@ -3,12 +3,25 @@ import { Store, ShoppingBag, CreditCard, Bike, Users } from 'lucide-react';
 import { StatCard } from '../../components/admin/Shared';
 import { useAdminRestaurants, useAdminOrders, useAdminDeliveryPartners } from '../../hooks/queries/useAdminQueries';
 import { Link } from 'react-router-dom';
+import { useRealtime } from '../../hooks/useRealtime';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '../../lib/react-query/queryKeys';
 
 export const Dashboard = () => {
     // We only fetch page=1, page_size=1 to get the 'total' count from the paginated response
     const { data: restaurantsData } = useAdminRestaurants({ page_size: 1 });
     const { data: ordersData } = useAdminOrders({ page_size: 1 });
     const { data: partnersData } = useAdminDeliveryPartners({ page_size: 1 });
+
+    const queryClient = useQueryClient();
+    useRealtime(
+        'admin:system',
+        ['ORDER_CREATED', 'ORDER_ACCEPTED', 'ORDER_REJECTED', 'ORDER_CANCELLED', 'ORDER_DELIVERED'],
+        () => {
+            // Only invalidating the exact query key the hook produces for the metric
+            queryClient.invalidateQueries({ queryKey: queryKeys.admin.orders.list({ page_size: 1 }) });
+        }
+    );
 
     return (
         <div className="space-y-8">

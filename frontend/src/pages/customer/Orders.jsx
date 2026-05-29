@@ -11,6 +11,10 @@ import { normalizePaginatedResponse } from '../../utils/api.utils';
 import { ORDER_STATUS } from '../../utils/orderStatus.utils';
 import { Clock, ChevronRight, RotateCcw, Star } from 'lucide-react';
 import { ROUTES } from '../../constants/routes';
+import { useRealtime } from '../../hooks/useRealtime';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '../../lib/react-query/queryKeys';
+import { useAuth } from '../../contexts/AuthContext';
 
 export const Orders = () => {
     const { data, isLoading, error, refetch } = useOrders({ limit: 20 });
@@ -19,6 +23,21 @@ export const Orders = () => {
     const [reviewOrderId, setReviewOrderId] = useState(null);
 
     const ordersData = normalizePaginatedResponse(data);
+    
+    const { user } = useAuth();
+    const queryClient = useQueryClient();
+
+    useRealtime(
+        user?.id ? `customer:${user.id}` : null,
+        [
+            'ORDER_CREATED', 'ORDER_ACCEPTED', 'ORDER_REJECTED', 
+            'ORDER_PREPARING', 'ORDER_READY_FOR_PICKUP', 
+            'ORDER_PICKED_UP', 'ORDER_IN_TRANSIT', 'ORDER_DELIVERED'
+        ],
+        () => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.orders.lists() });
+        }
+    );
 
     const handleReorder = async (e, order) => {
         e.preventDefault();

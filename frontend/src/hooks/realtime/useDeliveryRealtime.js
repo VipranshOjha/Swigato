@@ -23,7 +23,6 @@ export const useDeliveryRealtime = ({
         queryKey,
         queryFn,
         enabled,
-        refetchInterval: isRealtimeActive ? interval : false,
         // Optional: you can add network mode adjustments or staleTime if needed
     });
 };

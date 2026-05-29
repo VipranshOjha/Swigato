@@ -3,6 +3,9 @@ import { useAdminOrders } from '../../hooks/queries/useAdminQueries';
 import { AdminTable, StatusPill } from '../../components/admin/Shared';
 import { Link } from 'react-router-dom';
 import { Eye } from 'lucide-react';
+import { useRealtime } from '../../hooks/useRealtime';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '../../lib/react-query/queryKeys';
 
 export const Orders = () => {
     const [page, setPage] = useState(1);
@@ -13,6 +16,19 @@ export const Orders = () => {
         page_size: 15,
         ...(statusFilter ? { status: statusFilter } : {})
     });
+
+    const queryClient = useQueryClient();
+    useRealtime(
+        'admin:system',
+        [
+            'ORDER_CREATED', 'ORDER_ACCEPTED', 'ORDER_REJECTED', 
+            'ORDER_PREPARING', 'ORDER_READY_FOR_PICKUP', 
+            'RIDER_ASSIGNED', 'ORDER_PICKED_UP', 'ORDER_IN_TRANSIT', 'ORDER_DELIVERED'
+        ],
+        () => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.admin.orders.lists() });
+        }
+    );
 
     const columns = [
         { 

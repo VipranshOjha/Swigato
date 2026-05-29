@@ -37,6 +37,22 @@ class OrderRepository:
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
 
+    async def get_by_id_for_update(self, order_id: uuid.UUID) -> Order | None:
+        stmt = (
+            select(Order)
+            .where(Order.id == order_id)
+            .with_for_update()
+            .options(
+                selectinload(Order.items),
+                selectinload(Order.restaurant),
+                selectinload(Order.status_history),
+                selectinload(Order.customer),
+                selectinload(Order.delivery_address),
+            )
+        )
+        result = await self.session.execute(stmt)
+        return result.scalar_one_or_none()
+
     async def list_by_customer(
         self,
         customer_id: int,

@@ -8,6 +8,9 @@ import { ErrorState } from '../../components/common/ErrorState';
 import { useToast } from '../../contexts/ToastContext';
 import { IndianRupee, Bike, Map, Clock, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { ORDER_STATUS } from '../../utils/order.utils';
+import { useRealtime } from '../../hooks/useRealtime';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '../../lib/react-query/queryKeys';
 
 export const Dashboard = () => {
     const { addToast } = useToast();
@@ -16,6 +19,17 @@ export const Dashboard = () => {
     // Conditionally poll orders if online
     const isOnline = profile?.is_online || false;
     const { data: ordersData, isLoading: isOrdersLoading, error: ordersError } = useDeliveryOrders({}, { isOnline });
+
+    const queryClient = useQueryClient();
+    
+    // Realtime Listener
+    useRealtime(
+        profile?.id ? `delivery_partner:${profile.id}` : null,
+        ['RIDER_ASSIGNED', 'ORDER_PICKED_UP', 'ORDER_IN_TRANSIT', 'ORDER_DELIVERED'],
+        () => {
+            queryClient.invalidateQueries({ queryKey: queryKeys.delivery.orders.lists() });
+        }
+    );
 
     const acceptMutation = useAcceptDeliveryMutation();
     const rejectMutation = useRejectDeliveryMutation();

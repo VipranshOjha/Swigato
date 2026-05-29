@@ -1,273 +1,203 @@
 import os
-import asyncio
-from collections.abc import AsyncGenerator
-
+import uuid
 import pytest
 import pytest_asyncio
-from asgi_lifespan import LifespanManager
-from httpx import ASGITransport, AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine, AsyncEngine
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.pool import NullPool
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import rsa
 
-# ─── 1. Setup Test Settings BEFORE app imports ────────────────────────────────
-
-TEST_DATABASE_URL = "postgresql+asyncpg://postgres:mypassword@localhost:5432/swigato_test_db"
-os.environ["APP_ENV"] = "testing"
-os.environ["DATABASE_URL"] = TEST_DATABASE_URL
-
-private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-public_key = private_key.public_key()
-private_pem = private_key.private_bytes(
-    encoding=serialization.Encoding.PEM,
-    format=serialization.PrivateFormat.PKCS8,
-    encryption_algorithm=serialization.NoEncryption()
-).decode("utf-8")
-public_pem = public_key.public_bytes(
-    encoding=serialization.Encoding.PEM,
-    format=serialization.PublicFormat.SubjectPublicKeyInfo
-).decode("utf-8")
-
-import app.config as config_module
-from app.config import Settings, get_settings
-
-class TestSettings(Settings):
-    app_env: str = "testing"
-    database_url: str = TEST_DATABASE_URL
-    redis_url: str = "redis://localhost:6379/3"
-
-    @property
-    def jwt_private_key(self) -> str:
-        return private_pem
-
-    @property
-    def jwt_public_key(self) -> str:
-        return public_pem
-
-_test_settings = TestSettings()
-
-config_module.get_settings.cache_clear()
-config_module.get_settings = lambda: _test_settings
-import app.config
-app.config.get_settings = config_module.get_settings
-
-# ─── 2. Import app modules AFTER patch ────────────────────────────────────────
-
-from app.database import get_session
 from app.models.base import Base
-from app.models import *
+# Import all models to ensure metadata is populated
+import app.models.user
+import app.models.restaurant
+import app.models.menu
+import app.models.order
+import app.models.delivery
+import app.models.cart
+import app.models.address
+import app.models.payment
+import app.models.audit
 
-# ─── 3. Fixtures ──────────────────────────────────────────────────────────────
+from app.constants import UserRole, OrderStatus
 
-@pytest_asyncio.fixture(scope="session")
-async def test_engine() -> AsyncGenerator[AsyncEngine, None]:
-    engine = create_async_engine(get_settings().database_url, poolclass=NullPool)
-    
-    async with engine.begin() as conn:
+TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL")
+
+if not TEST_DATABASE_URL:
+    pytest.fail("TEST_DATABASE_URL environment variable is required for testing. Example: postgresql+asyncpg://postgres:postgres@localhost:5432/swigato_test")
+
+# Engine with NullPool to prevent connection sharing issues across concurrency tests
+test_engine = create_async_engine(TEST_DATABASE_URL, poolclass=NullPool, echo=False)
+TestingSessionLocal = async_sessionmaker(autocommit=False, autoflush=False, bind=test_engine, class_=AsyncSession)
+
+@pytest_asyncio.fixture(scope="session", autouse=True)
+async def setup_test_db():
+    async with test_engine.begin() as conn:
+        # We explicitly drop and create for a clean slate. 
+        # In a real environment, you might use Alembic, but create_all is faster for tests.
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
+    yield
+    async with test_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+    await test_engine.dispose()
+
+@pytest_asyncio.fixture
+async def db_session():
+    """
+    Function-scoped DB session. Use for standard integration tests.
+    It does not automatically rollback at the end because we dropped the schema and are just inserting test data.
+    Actually, to keep tests isolated, we should wrap in a transaction and rollback.
+    """
+    connection = await test_engine.connect()
+    transaction = await connection.begin()
+    session = AsyncSession(bind=connection, join_transaction_mode="create_savepoint")
+    
+    yield session
+    
+    await session.close()
+    await transaction.rollback()
+    await connection.close()
+
+@pytest.fixture
+def session_factory():
+    """
+    Returns a factory that creates fresh, independent AsyncSessions. 
+    Crucial for concurrency tests where we need 3 simultaneous connections that can block each other.
+    """
+    return TestingSessionLocal
+
+# --- Mock Event Bus ---
+
+class MockEventBus:
+    def __init__(self):
+        self.published_events = []
+
+    async def safe_publish(self, tenant_scope: str, event_envelope):
+        self.published_events.append({
+            "scope": tenant_scope,
+            "event": event_envelope
+        })
         
-    from app.main import _seed_roles
-    from sqlalchemy.ext.asyncio import async_sessionmaker
-    session_factory = async_sessionmaker(engine, expire_on_commit=False)
-    
-    import app.database
-    original_factory = app.database._async_session_factory
-    app.database._async_session_factory = session_factory
-    
-    await _seed_roles()
+    async def publish(self, tenant_scope: str, event_envelope):
+        await self.safe_publish(tenant_scope, event_envelope)
 
-    yield engine
-    
-    # We intentionally do not drop tables here to avoid hangs on teardown if connections
-    # are left in a weird state. The tables are dropped at the start of the next test session anyway.
-    app.database._async_session_factory = original_factory
-    await engine.dispose()
+@pytest.fixture(autouse=True)
+def mock_event_bus(monkeypatch):
+    mock_bus = MockEventBus()
+    # Patch the global event bus
+    monkeypatch.setattr("app.realtime.event_bus.event_bus", mock_bus)
+    # Also patch it in specific services just in case they import it directly
+    monkeypatch.setattr("app.services.order_service.event_bus", mock_bus)
+    monkeypatch.setattr("app.services.delivery_service.event_bus", mock_bus)
+    return mock_bus
+
+# --- Test Data Builders ---
 
 @pytest_asyncio.fixture
-async def db_session(test_engine) -> AsyncGenerator[AsyncSession, None]:
-    session_factory = async_sessionmaker(test_engine, expire_on_commit=False)
-    async with session_factory() as session:
-        await session.begin()
-        try:
-            yield session
-        finally:
-            await session.rollback()
+async def create_customer(db_session):
+    async def _builder(email="customer@test.com"):
+        user = app.models.user.User(
+            email=email,
+            full_name="Test Customer",
+            hashed_password="fake",
+            role=UserRole.CUSTOMER.value
+        )
+        db_session.add(user)
+        await db_session.flush()
+        return user
+    return _builder
 
 @pytest_asyncio.fixture
-async def fake_redis_session():
-    import fakeredis.aioredis
-    # Create the FakeRedis instance in the session loop
-    redis = fakeredis.aioredis.FakeRedis(decode_responses=True)
-    yield redis
-    await redis.aclose()
+async def create_owner_and_restaurant(db_session):
+    async def _builder(email="owner@test.com", restaurant_name="Test Rest"):
+        user = app.models.user.User(
+            email=email,
+            full_name="Test Owner",
+            hashed_password="fake",
+            role=UserRole.RESTAURANT_OWNER.value
+        )
+        db_session.add(user)
+        await db_session.flush()
+        
+        restaurant = app.models.restaurant.Restaurant(
+            owner_id=user.id,
+            name=restaurant_name,
+            address="123 Test St",
+            is_active=True
+        )
+        db_session.add(restaurant)
+        await db_session.flush()
+        return user, restaurant
+    return _builder
 
 @pytest_asyncio.fixture
-async def client(test_engine, fake_redis_session) -> AsyncGenerator[AsyncClient, None]:
-    from app.main import create_app
-    from unittest.mock import patch
-    from contextlib import asynccontextmanager
-    import app.redis
-
-    app.redis._cache_client = fake_redis_session
-    
-    app_instance = create_app()
-
-    @asynccontextmanager
-    async def mock_lifespan(app):
-        yield
-
-    async def mock_rate_limit(self, request, call_next):
-        return await call_next(request)
-
-    with patch('app.main.lifespan', new=mock_lifespan), \
-         patch('app.core.middleware.RateLimitMiddleware.dispatch', new=mock_rate_limit):
-        transport = ASGITransport(app=app_instance)
-        async with AsyncClient(transport=transport, base_url="http://testserver") as c:
-            yield c
-
-
-@pytest_asyncio.fixture
-async def registered_user(client: AsyncClient):
-    # Register an unverified user
-    await client.post("/api/v1/auth/register", json={
-        "first_name": "Registered",
-        "last_name": "User",
-        "email": "test@swigato.com",
-        "password": "SecurePass1!",
-    })
-    return {"email": "test@swigato.com", "password": "SecurePass1!"}
+async def create_delivery_partner(db_session):
+    async def _builder(email="rider@test.com", is_online=True):
+        user = app.models.user.User(
+            email=email,
+            full_name="Test Rider",
+            hashed_password="fake",
+            role=UserRole.DELIVERY_PARTNER.value
+        )
+        db_session.add(user)
+        await db_session.flush()
+        
+        partner = app.models.delivery.DeliveryPartnerProfile(
+            user_id=user.id,
+            vehicle_type="bike",
+            is_verified=True,
+            is_online=is_online,
+            is_suspended=False
+        )
+        db_session.add(partner)
+        await db_session.flush()
+        return user, partner
+    return _builder
 
 @pytest_asyncio.fixture
-async def verified_user_tokens(client: AsyncClient, db_session):
-    email = "verified@swigato.com"
-    password = "SecurePass1!"
-    await client.post("/api/v1/auth/register", json={
-        "first_name": "Verified",
-        "last_name": "User",
-        "email": email,
-        "password": password,
-    })
-    
-    from sqlalchemy import update
-    from app.models.user import User
-    await db_session.execute(
-        update(User).where(User.email == email).values(is_email_verified=True)
-    )
-    await db_session.commit()
-    
-    response = await client.post("/api/v1/auth/login", json={
-        "email": email,
-        "password": password,
-    })
-    data = response.json()
-    refresh_token = response.cookies.get("refresh_token", "")
-    return {
-        "access_token": data.get("access_token", ""),
-        "refresh_token": refresh_token,
-        "email": email,
-        "password": password
-    }
-
-
-@pytest_asyncio.fixture
-async def test_user(db_session: AsyncSession, verified_user_tokens: dict):
-    from sqlalchemy import select
-    from app.models.user import User
-    
-    stmt = select(User).where(User.email == verified_user_tokens["email"])
-    result = await db_session.execute(stmt)
-    return result.scalar_one()
+async def build_cart_with_items(db_session):
+    async def _builder(customer, restaurant):
+        menu_item = app.models.menu.MenuItem(
+            restaurant_id=restaurant.id,
+            name="Burger",
+            price=10.00,
+            is_available=True
+        )
+        db_session.add(menu_item)
+        await db_session.flush()
+        
+        cart = app.models.cart.Cart(user_id=customer.id, restaurant_id=restaurant.id)
+        db_session.add(cart)
+        await db_session.flush()
+        
+        cart_item = app.models.cart.CartItem(cart_id=cart.id, menu_item_id=menu_item.id, quantity=2)
+        db_session.add(cart_item)
+        await db_session.flush()
+        
+        # Need an address for checkout
+        address = app.models.address.Address(
+            user_id=customer.id,
+            street="123 Customer Ave",
+            city="City",
+            state="State",
+            zip_code="12345"
+        )
+        db_session.add(address)
+        await db_session.flush()
+        
+        return cart, menu_item, address
+    return _builder
 
 @pytest_asyncio.fixture
-async def auth_headers(verified_user_tokens: dict):
-    return {"Authorization": f"Bearer {verified_user_tokens['access_token']}"}
-
-
-@pytest_asyncio.fixture
-async def admin_token(client: AsyncClient, db_session: AsyncSession):
-    email = "admin@swigato.com"
-    password = "AdminPassword1!"
-    await client.post("/api/v1/auth/register", json={
-        "first_name": "Admin",
-        "last_name": "User",
-        "email": email,
-        "password": password,
-    })
-    
-    from sqlalchemy import update, select
-    from app.models.user import User, Role, UserRole
-    
-    # Verify user
-    await db_session.execute(
-        update(User).where(User.email == email).values(is_email_verified=True)
-    )
-    # Assign admin role
-    admin_role = (await db_session.execute(select(Role).where(Role.name == "admin"))).scalar_one()
-    user = (await db_session.execute(select(User).where(User.email == email))).scalar_one()
-    if not any(ur.role_id == admin_role.id for ur in user.user_roles):
-        db_session.add(UserRole(user_id=user.id, role_id=admin_role.id))
-        await db_session.commit()
-    
-    response = await client.post("/api/v1/auth/login", json={"email": email, "password": password})
-    return response.json().get("access_token", "")
-
-@pytest_asyncio.fixture
-async def restaurant_owner_token(client: AsyncClient, db_session: AsyncSession):
-    email = "owner@swigato.com"
-    password = "OwnerPassword1!"
-    await client.post("/api/v1/auth/register", json={
-        "first_name": "Owner",
-        "last_name": "User",
-        "email": email,
-        "password": password,
-    })
-    
-    from sqlalchemy import update, select
-    from app.models.user import User, Role, UserRole
-    
-    # Verify user
-    await db_session.execute(
-        update(User).where(User.email == email).values(is_email_verified=True)
-    )
-    # Assign restaurant_owner role
-    owner_role = (await db_session.execute(select(Role).where(Role.name == "restaurant_owner"))).scalar_one()
-    user = (await db_session.execute(select(User).where(User.email == email))).scalar_one()
-    if not any(ur.role_id == owner_role.id for ur in user.user_roles):
-        db_session.add(UserRole(user_id=user.id, role_id=owner_role.id))
-        await db_session.commit()
-    
-    response = await client.post("/api/v1/auth/login", json={"email": email, "password": password})
-    return response.json().get("access_token", "")
-
-
-@pytest_asyncio.fixture
-async def delivery_partner_token(client: AsyncClient, db_session: AsyncSession):
-    email = "delivery@swigato.com"
-    password = "DeliveryPassword1!"
-    await client.post("/api/v1/auth/register", json={
-        "first_name": "Delivery",
-        "last_name": "Partner",
-        "email": email,
-        "password": password,
-    })
-    
-    from sqlalchemy import update, select
-    from app.models.user import User, Role, UserRole
-    
-    # Verify user
-    await db_session.execute(
-        update(User).where(User.email == email).values(is_email_verified=True)
-    )
-    # Assign delivery_partner role
-    delivery_role = (await db_session.execute(select(Role).where(Role.name == "delivery_partner"))).scalar_one()
-    user = (await db_session.execute(select(User).where(User.email == email))).scalar_one()
-    if not any(ur.role_id == delivery_role.id for ur in user.user_roles):
-        db_session.add(UserRole(user_id=user.id, role_id=delivery_role.id))
-        await db_session.commit()
-    
-    response = await client.post("/api/v1/auth/login", json={"email": email, "password": password})
-    return response.json().get("access_token", "")
-
-
+async def create_pending_order(db_session, create_customer, create_owner_and_restaurant, build_cart_with_items):
+    async def _builder():
+        from app.services.order_service import OrderService
+        from app.schemas.order import OrderCreate
+        
+        customer = await create_customer()
+        owner, restaurant = await create_owner_and_restaurant()
+        cart, menu_item, address = await build_cart_with_items(customer, restaurant)
+        
+        service = OrderService(db_session)
+        order_resp = await service.create_order(customer.id, OrderCreate(delivery_address_id=address.id, notes=""))
+        return customer, owner, restaurant, order_resp.id
+    return _builder

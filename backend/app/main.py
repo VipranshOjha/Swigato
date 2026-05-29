@@ -54,11 +54,23 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     init_db(settings)
     init_redis()
     await _seed_roles()
+    
+    import asyncio
+    from app.realtime.websocket_manager import manager as ws_manager
+    pruner_task = asyncio.create_task(ws_manager.start_pruner())
 
     await logger.ainfo("app_ready")
     yield
 
     await logger.ainfo("app_shutting_down")
+    
+    if pruner_task:
+        pruner_task.cancel()
+        try:
+            await pruner_task
+        except asyncio.CancelledError:
+            pass
+            
     await close_db()
     await close_redis()
 
@@ -79,6 +91,10 @@ def create_app() -> FastAPI:
 
     register_middleware(app)
     register_exception_handlers(app)
+    
+    from app.api.v1 import websocket
+    api_router.include_router(websocket.router, tags=["Realtime"])
+    
     app.include_router(api_router)
 
     @app.get("/", tags=["System"], include_in_schema=False)

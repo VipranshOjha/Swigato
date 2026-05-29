@@ -9,16 +9,6 @@ export const useOrderTracking = (orderId) => {
             const response = await apiClient.get(`/orders/${orderId}`);
             return response;
         },
-        refetchInterval: (query) => {
-            // Polling interval in ms
-            const currentStatus = query?.state?.data?.status;
-            // Only poll if the order is in an active state
-            if (currentStatus && ACTIVE_ORDER_STATUSES.includes(currentStatus)) {
-                return 15000;
-            }
-            // Stop polling once terminal
-            return false;
-        },
         enabled: !!orderId,
     });
 };
