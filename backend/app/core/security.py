@@ -29,7 +29,7 @@ from app.core.exceptions import TokenExpiredError, TokenInvalidError
 
 logger = structlog.get_logger(__name__)
 
-# ─── Password Hashing ─────────────────────────────────────────────────────────
+# Password Hashing
 
 # argon2 with production-grade parameters
 _pwd_hasher = PasswordHash([Argon2Hasher()])
@@ -47,7 +47,7 @@ def verify_password(plain: str, hashed: str) -> tuple[bool, str | None]:
     return _pwd_hasher.verify_and_update(plain, hashed)
 
 
-# ─── JWT ──────────────────────────────────────────────────────────────────────
+# JWT
 
 def _get_private_key() -> str:
     return config.get_settings().jwt_private_key

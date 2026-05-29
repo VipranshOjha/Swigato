@@ -1,21 +1,4 @@
-"""
-app/main.py
-────────────
-FastAPI application factory with async lifespan.
 
-REPLACES the old synchronous main.py which:
-- Used `Base.metadata.create_all(bind=engine)` at import time  ← REMOVED
-- Used sync engine                                              ← REMOVED
-- Had no middleware, no error handlers, no health checks
-
-Now:
-- Async lifespan handles DB + Redis init/shutdown
-- Alembic owns schema (no create_all)
-- ORJSON for faster JSON serialization
-- Structured middleware stack
-- /health and /ready endpoints for load balancers
-- API docs hidden in production
-"""
 from __future__ import annotations
 
 from contextlib import asynccontextmanager

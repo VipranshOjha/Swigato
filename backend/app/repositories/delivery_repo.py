@@ -19,7 +19,7 @@ class DeliveryPartnerRepository:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
-    # ── Queries ───────────────────────────────────────────────────────────────
+    # Queries
 
     async def get_by_id(self, profile_id: uuid.UUID) -> DeliveryPartnerProfile | None:
         stmt = select(DeliveryPartnerProfile).where(
@@ -35,7 +35,7 @@ class DeliveryPartnerRepository:
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def find_available_partner(self) -> DeliveryPartnerProfile | None:
+    async def find_available_partner(self, exclude_partner_id: uuid.UUID | None = None) -> DeliveryPartnerProfile | None:
         """Find the first online delivery partner who does not have an active order."""
         from app.models.order import Order
         from app.constants import OrderStatus
@@ -60,7 +60,13 @@ class DeliveryPartnerRepository:
                 DeliveryPartnerProfile.is_suspended == False,
                 Order.id == None  # Ensures they have no active orders
             )
-            .order_by(DeliveryPartnerProfile.total_deliveries.asc())
+        )
+        
+        if exclude_partner_id:
+            stmt = stmt.where(DeliveryPartnerProfile.id != exclude_partner_id)
+            
+        stmt = (
+            stmt.order_by(DeliveryPartnerProfile.total_deliveries.asc())
             .limit(1)
         )
         result = await self.session.execute(stmt)
@@ -100,7 +106,7 @@ class DeliveryPartnerRepository:
         result = await self.session.execute(stmt)
         return result.scalars().all(), count
 
-    # ── Mutations ─────────────────────────────────────────────────────────────
+    # Mutations
 
     async def create(self, **kwargs) -> DeliveryPartnerProfile:
         profile = DeliveryPartnerProfile(**kwargs)

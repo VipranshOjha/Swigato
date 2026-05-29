@@ -26,7 +26,7 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    # ─── App ──────────────────────────────────────────────────────────────────
+    # App
     app_env: Literal["development", "staging", "production", "testing"] = "development"
     app_debug: bool = False
     app_host: str = "0.0.0.0"
@@ -44,7 +44,7 @@ class Settings(BaseSettings):
             return v  # type: ignore
         raise ValueError(v)
 
-    # ─── Security ─────────────────────────────────────────────────────────────
+    # Security
     # RS256 asymmetric signing — generate with:
     #   openssl genrsa -out keys/private.pem 2048
     #   openssl rsa -in keys/private.pem -pubout -out keys/public.pem
@@ -58,7 +58,7 @@ class Settings(BaseSettings):
     # Now only used as a fallback; primary auth is RS256 JWT
     secret_key: str = "change-me-to-a-long-random-string-in-production"
 
-    # ─── Database ─────────────────────────────────────────────────────────────
+    # Database
     # Existing .env has: DATABASE_URL=postgresql://...
     # We need the asyncpg variant. The app will transform it automatically.
     database_url: str = "postgresql+asyncpg://postgres:mypassword@localhost:5432/swigato"
@@ -66,62 +66,62 @@ class Settings(BaseSettings):
     database_max_overflow: int = 10
     database_pool_timeout: int = 30
 
-    # ─── Redis ────────────────────────────────────────────────────────────────
+    # Redis
     redis_url: str = "redis://localhost:6379/0"
     redis_cache_db: int = 0
     redis_celery_db: int = 1
     redis_rate_limit_db: int = 2
 
-    # ─── Celery ───────────────────────────────────────────────────────────────
+    # Celery
     celery_broker_url: str = "redis://localhost:6379/1"
     celery_result_backend: str = "redis://localhost:6379/1"
 
-    # ─── Email / AWS SES ──────────────────────────────────────────────────────
+    # Email / AWS SES
     aws_access_key_id: str = ""
     aws_secret_access_key: str = ""
     aws_region: str = "ap-south-1"
     ses_from_email: str = "no-reply@swigato.com"
     ses_from_name: str = "Swigato"
 
-    # ─── Cloudflare R2 ────────────────────────────────────────────────────────
+    # Cloudflare R2
     r2_account_id: str = ""
     r2_access_key_id: str = ""
     r2_secret_access_key: str = ""
     r2_bucket_name: str = "swigato-media"
     r2_public_url: str = "https://media.swigato.com"
 
-    # ─── Payment — Razorpay ───────────────────────────────────────────────────
+    # Payment — Razorpay
     razorpay_key_id: str = ""
     razorpay_key_secret: str = ""
     razorpay_webhook_secret: str = ""
 
-    # ─── Payment — Stripe ─────────────────────────────────────────────────────
+    # Payment — Stripe
     stripe_secret_key: str = ""
     stripe_webhook_secret: str = ""
 
-    # ─── SMS ──────────────────────────────────────────────────────────────────
+    # SMS
     twilio_account_sid: str = ""
     twilio_auth_token: str = ""
     twilio_from_number: str = ""
 
-    # ─── Firebase ─────────────────────────────────────────────────────────────
+    # Firebase
     firebase_credentials_path: Path = Path("./keys/firebase-service-account.json")
 
-    # ─── Rate Limiting ────────────────────────────────────────────────────────
+    # Rate Limiting
     rate_limit_login_per_minute: int = 5
     rate_limit_register_per_minute: int = 10
     rate_limit_forgot_password_per_minute: int = 3
     rate_limit_global_per_minute: int = 100
 
-    # ─── OTP ──────────────────────────────────────────────────────────────────
+    # OTP
     otp_expire_minutes: int = 10
     otp_length: int = 6
 
-    # ─── Geo ──────────────────────────────────────────────────────────────────
+    # Geo
     default_delivery_radius_km: float = 10.0
     max_delivery_radius_km: float = 25.0
 
-    # ─── Computed properties ──────────────────────────────────────────────────
+    # Computed properties
     @computed_field  # type: ignore[misc]
     @property
     def jwt_private_key(self) -> str:

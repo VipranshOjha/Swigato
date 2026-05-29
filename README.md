@@ -1,11 +1,12 @@
 <div align="center">
   <img src="./assets/swigato-logo.png" alt="Swigato Logo" width="220" />
   <h1>Swigato — Food Delivery Platform</h1>
-  <p><strong>A production-grade, full-stack food delivery ecosystem built with FastAPI, PostgreSQL, and Vite.</strong></p>
+  <p><strong>A production-grade, full-stack food delivery ecosystem built with FastAPI, PostgreSQL, React, and Vite.</strong></p>
   
   [![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
   [![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
   [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+  [![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://react.dev/)
   [![Vite](https://img.shields.io/badge/Vite-B73BFE?style=for-the-badge&logo=vite&logoColor=FFD62E)](https://vitejs.dev/)
   [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 </div>
@@ -14,7 +15,7 @@
 
 ## Project Overview
 
-Swigato is a complete, real-world food delivery ecosystem inspired by industry leaders like Swiggy, Zomato, Uber Eats, and DoorDash. Developed as a comprehensive backend engineering portfolio project, it maintains production-quality architecture, rigorous engineering standards, and an intuitive user interface utilizing the **Kinetic Zest** design system.
+Swigato is a complete, real-world food delivery ecosystem inspired by industry leaders like Swiggy, Zomato, Uber Eats, and DoorDash. Developed as a comprehensive backend engineering portfolio project, it maintains production-quality architecture, rigorous engineering standards, and a fully-featured React SPA frontend.
 
 The objective of Swigato is to encapsulate the vast architectural complexity behind a modern food delivery platform. It elegantly handles four distinct user roles, resilient state-machine-driven order fulfillment, transactional delivery mapping, mock payment webhooks, and Role-Based Access Control (RBAC).
 
@@ -22,7 +23,7 @@ The objective of Swigato is to encapsulate the vast architectural complexity beh
 
 ## Architecture Overview
 
-Swigato is built as a robust modular monolith, specifically architected to facilitate a seamless transition to microservices if needed. 
+Swigato is built as a robust modular monolith, specifically architected to facilitate a seamless transition to microservices if needed.
 
 ### Backend Layering Strategy:
 1. **API / Router Layer:** Dedicated strictly to HTTP lifecycle, validation, and request/response mapping.
@@ -46,11 +47,13 @@ Swigato is built as a robust modular monolith, specifically architected to facil
 - **Discovery:** Browse active restaurants, explore menus, and filter by dietary tags (Veg/Non-Veg).
 - **Cart & Checkout:** Persistent cart logic enforcing single-restaurant constraint.
 - **Real-Time Tracking:** Track active orders across state transitions (Placed → Accepted → Preparing → Picked Up → Delivered).
+- **Reviews:** Submit restaurant reviews after order delivery.
 
 ### 🏪 Restaurant Owner
 - **Onboarding:** Automated registration and profile management requiring admin approval.
 - **Menu Management:** Complete CRUD interface for defining Categories, Menu Items, and toggling live availability.
 - **Order Fulfillment:** Live dashboard to Accept/Reject incoming orders, mark as Preparing, and dispatch as Ready for Pickup.
+- **Reviews Dashboard:** View and respond to customer reviews.
 
 ### 🛵 Delivery Partner
 - **Fleet Onboarding:** Registration via vehicle type and automated dispatch verification.
@@ -62,6 +65,7 @@ Swigato is built as a robust modular monolith, specifically architected to facil
 ### 🛡️ Admin
 - **Ecosystem Moderation:** Dashboard to audit, approve, or suspend Restaurants and Delivery Partners.
 - **System Logs:** Read-only access to global Order states and Payment logs.
+- **Review Moderation:** Inspect and moderate customer reviews across the platform.
 
 ---
 
@@ -76,10 +80,12 @@ Swigato is built as a robust modular monolith, specifically architected to facil
 - **Auth:** JWT, Argon2 (pwdlib)
 
 ### Frontend
-- **Core:** Vanilla JS (ES6 Modules), HTML5
-- **Build Tool:** Vite
-- **Styling:** Tailwind CSS (CDN)
-- **HTTP Client:** Axios (Interceptors for token refresh rotation)
+- **Core:** React 19, Vite 8
+- **Routing:** React Router v7
+- **Server State:** TanStack React Query v5
+- **Styling:** Tailwind CSS v3
+- **HTTP Client:** Axios (interceptors for JWT refresh rotation)
+- **Icons:** Lucide React
 
 ---
 
@@ -98,11 +104,19 @@ Swigato/
 │   │   └── services/         # Business Logic & Workflows
 │   └── requirements.txt      # Python dependencies
 │
-├── frontend/                 # Vite Frontend Application
-│   ├── js/                   # Vanilla JS logic mapping directly to APIs
-│   ├── *.html                # Screen-specific templates
+├── frontend/                 # React SPA (Vite)
+│   ├── src/
+│   │   ├── api/              # Axios client with JWT interceptor
+│   │   ├── services/         # Domain API service modules
+│   │   ├── hooks/            # React Query hooks (queries, mutations, realtime)
+│   │   ├── contexts/         # Auth, Cart, Toast contexts
+│   │   ├── pages/            # Role-segmented page components
+│   │   ├── layouts/          # Per-role layout wrappers
+│   │   ├── components/       # Shared UI components
+│   │   ├── routes/           # React Router config + route guards
+│   │   └── constants/        # Routes and roles constants
 │   ├── package.json          # Node dependencies
-│   └── vite.config.js        # Multi-page bundler configuration
+│   └── vite.config.js        # Vite bundler configuration
 │
 └── docs/                     # Architectural Documentation
     ├── PROJECT_CONTEXT.md
@@ -151,7 +165,7 @@ Swigato/
    ```bash
    npm run dev
    ```
-4. The web app will generally be available at `http://localhost:5173`.
+4. The web app will be available at `http://localhost:5173`.
 
 ---
 
@@ -213,13 +227,17 @@ The foundational milestones have been successfully completed:
 - [x] Phase 6: Core Order Management System
 - [x] Phase 7: Payment Intent & Webhook simulation
 - [x] Phase 8: Delivery Partner fleet mapping & state tracking
+- [x] Phase 9 (Partial): Reviews backend & frontend integration
+
+**Checkpoint: React Frontend Migration complete.** The full React SPA covers all implemented backend domains — Auth, Restaurants, Menus, Cart, Orders, Payments, Delivery, and Reviews.
 
 ---
 
 ## Upcoming Phases
 
-- **Phase 9:** Reviews, Rating system, and Promotional Coupons
-- **Phase 10:** Algorithmic Search, Analytics Engine, and System Observability/Logging
+- **Phase 9 (remaining):** Coupons & Notifications
+- **Phase 10:** Realtime Infrastructure (WebSockets / SSE for live order tracking)
+- **Phase 11:** Algorithmic Search, Analytics Engine, and System Observability/Logging
 
 ---
 

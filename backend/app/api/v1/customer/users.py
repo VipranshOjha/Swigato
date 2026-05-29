@@ -51,7 +51,7 @@ async def get_my_roles(
     return user.role_names
 
 
-# ─── Addresses ───────────────────────────────────────────────────────────────
+# Addresses
 
 @router.get("/me/addresses", response_model=list[AddressResponse], status_code=status.HTTP_200_OK)
 async def get_my_addresses(

@@ -45,3 +45,30 @@ from app.models.delivery import (  # noqa: F401
     DeliveryPartnerProfile,
     DeliveryLocationLog,
 )
+from app.models.review import Review  # noqa: F401
+
+__all__ = [
+    "User",
+    "Role",
+    "UserRole",
+    "RefreshToken",
+    "EmailVerification",
+    "PasswordReset",
+    "Address",
+    "Restaurant",
+    "RestaurantCategory",
+    "OperatingHour",
+    "RestaurantDocument",
+    "MenuCategory",
+    "MenuItem",
+    "Cart",
+    "CartItem",
+    "Order",
+    "OrderItem",
+    "OrderStatusHistory",
+    "Payment",
+    "Refund",
+    "DeliveryPartnerProfile",
+    "DeliveryLocationLog",
+    "Review",
+]

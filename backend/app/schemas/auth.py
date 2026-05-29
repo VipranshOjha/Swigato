@@ -19,7 +19,7 @@ from pydantic import EmailStr, Field, field_validator, model_validator
 from app.schemas.common import AppBaseModel
 
 
-# ─── Registration ─────────────────────────────────────────────────────────────
+# Registration
 
 class RegisterRequest(AppBaseModel):
     first_name: str = Field(min_length=1, max_length=100)
@@ -62,7 +62,7 @@ class RegisterResponse(AppBaseModel):
     message: str = "Registration successful. Please verify your email."
 
 
-# ─── Login ────────────────────────────────────────────────────────────────────
+# Login
 
 class LoginRequest(AppBaseModel):
     email: EmailStr
@@ -81,7 +81,7 @@ class TokenResponse(AppBaseModel):
     expires_in: int  # seconds until access token expiry
 
 
-# ─── Refresh ──────────────────────────────────────────────────────────────────
+# Refresh
 
 class RefreshTokenRequest(AppBaseModel):
     """
@@ -91,13 +91,14 @@ class RefreshTokenRequest(AppBaseModel):
     refresh_token: str | None = None  # From body; if None, look in cookie
 
 
-# ─── Logout ───────────────────────────────────────────────────────────────────
+# Logout
 
 class LogoutRequest(AppBaseModel):
     logout_all_devices: bool = False  # Revoke ALL refresh tokens for the user
+    refresh_token: str | None = None
 
 
-# ─── Email Verification ───────────────────────────────────────────────────────
+# Email Verification
 
 class VerifyEmailRequest(AppBaseModel):
     token: str
@@ -107,7 +108,7 @@ class ResendVerificationRequest(AppBaseModel):
     email: EmailStr
 
 
-# ─── Password Reset ───────────────────────────────────────────────────────────
+# Password Reset
 
 class ForgotPasswordRequest(AppBaseModel):
     email: EmailStr

@@ -36,7 +36,7 @@ class OrderService:
         self.cart_repo = CartRepository(session)
         self.address_repo = AddressRepository(session)
 
-    # ── Internal Helpers ──────────────────────────────────────────────────────
+    # Internal Helpers
 
     async def _get_order(self, order_id: uuid.UUID) -> Order:
         order = await self.order_repo.get_by_id(order_id)
@@ -88,7 +88,7 @@ class OrderService:
     def _build_detail_response(self, order: Order) -> OrderDetailResponse:
         return OrderDetailResponse.model_validate(order)
 
-    # ── Customer Actions ──────────────────────────────────────────────────────
+    # Customer Actions
 
     async def create_order(self, customer_id: int, payload: OrderCreate) -> OrderResponse:
         """Create an order from the user's cart."""
@@ -201,9 +201,10 @@ class OrderService:
             order, OrderStatus.CANCELLED, changed_by=customer_id
         )
         await self.session.commit()
+        await self.session.refresh(order, ["status_history", "updated_at"])
         return self._build_detail_response(order)
 
-    # ── Owner Actions ─────────────────────────────────────────────────────────
+    # Owner Actions
 
     async def owner_accept_order(self, owner_id: int, order_id: uuid.UUID) -> OrderDetailResponse:
         order = await self._get_order(order_id)
@@ -214,6 +215,7 @@ class OrderService:
             order, OrderStatus.ACCEPTED, changed_by=owner_id
         )
         await self.session.commit()
+        await self.session.refresh(order, ["status_history", "updated_at"])
         return self._build_detail_response(order)
 
     async def owner_reject_order(
@@ -231,6 +233,7 @@ class OrderService:
             rejection_reason=reason,
         )
         await self.session.commit()
+        await self.session.refresh(order, ["status_history", "updated_at"])
         return self._build_detail_response(order)
 
     async def owner_update_status(
@@ -240,16 +243,19 @@ class OrderService:
         if order.restaurant.owner_id != owner_id:
             raise PermissionDeniedError()
         
-        if new_status == OrderStatus.RIDER_ASSIGNED:
-            from app.services.delivery_service import DeliveryService
-            delivery_service = DeliveryService(self.session)
-            assigned = await delivery_service.auto_assign_order(order.id)
-            if not assigned:
-                raise HTTPException(status_code=400, detail="No online delivery partners available right now.")
-            order = await self._get_order(order.id)
-            return self._build_detail_response(order)
-            
         # Only certain transitions are typically driven by the owner (e.g. PREPARING, READY_FOR_PICKUP)
         order = await self._transition_state(order, new_status, changed_by=owner_id)
         await self.session.commit()
+        
+        # Auto-assign a rider if the order is ready for pickup
+        if new_status == OrderStatus.READY_FOR_PICKUP:
+            from app.services.delivery_service import DeliveryService
+            delivery_service = DeliveryService(self.session)
+            assigned = await delivery_service.auto_assign_order(order.id)
+            if assigned:
+                # Auto-transition to rider assigned
+                order = await self._transition_state(order, OrderStatus.RIDER_ASSIGNED, changed_by=owner_id)
+                await self.session.commit()
+
+        await self.session.refresh(order, ["status_history", "updated_at"])
         return self._build_detail_response(order)

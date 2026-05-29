@@ -82,7 +82,7 @@ class Order(Base, TimestampMixin):
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     rejection_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    # ─── Relationships ────────────────────────────────────────────────────────
+    # Relationships
     customer: Mapped["User"] = relationship("User", foreign_keys=[customer_id])
     restaurant: Mapped["Restaurant"] = relationship("Restaurant", foreign_keys=[restaurant_id])
     delivery_address: Mapped[Optional["Address"]] = relationship(
@@ -128,7 +128,7 @@ class OrderItem(Base, TimestampMixin):
     unit_price: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
     total_price: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
 
-    # ─── Relationships ────────────────────────────────────────────────────────
+    # Relationships
     order: Mapped["Order"] = relationship("Order", back_populates="items")
     menu_item: Mapped[Optional["MenuItem"]] = relationship("MenuItem")
 
@@ -159,7 +159,7 @@ class OrderStatusHistory(Base):
         nullable=False,
     )
 
-    # ─── Relationships ────────────────────────────────────────────────────────
+    # Relationships
     order: Mapped["Order"] = relationship("Order", back_populates="status_history")
 
     def __repr__(self) -> str:

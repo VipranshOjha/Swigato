@@ -25,7 +25,7 @@ from app.repositories.user_repo import UserRepository
 from app.services.auth_service import AuthService
 
 
-# ─── Repositories ────────────────────────────────────────────────────────────
+# Repositories
 
 def get_user_repository(session: DbSession) -> UserRepository:
     return UserRepository(session)
@@ -34,7 +34,7 @@ def get_user_repository(session: DbSession) -> UserRepository:
 UserRepo = Annotated[UserRepository, Depends(get_user_repository)]
 
 
-# ─── Services ─────────────────────────────────────────────────────────────────
+# Services
 
 def get_auth_service(user_repo: UserRepo) -> AuthService:
     return AuthService(user_repo)
@@ -43,7 +43,7 @@ def get_auth_service(user_repo: UserRepo) -> AuthService:
 AuthSvc = Annotated[AuthService, Depends(get_auth_service)]
 
 
-# ─── Request context ─────────────────────────────────────────────────────────
+# Request context
 
 def get_client_ip(request: Request) -> str | None:
     """Extract real client IP (supports X-Forwarded-For from reverse proxy)."""

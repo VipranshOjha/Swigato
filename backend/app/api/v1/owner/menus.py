@@ -20,7 +20,7 @@ router = APIRouter(
     tags=["Owner Menu Management"],
 )
 
-# --- Categories ---
+# Categories
 
 @router.post(
     "/categories",
@@ -83,7 +83,7 @@ async def delete_category(
     await service.delete_category(restaurant_id, category_id, current_user.id)
 
 
-# --- Menu Items ---
+# Menu Items
 
 @router.post(
     "/items",

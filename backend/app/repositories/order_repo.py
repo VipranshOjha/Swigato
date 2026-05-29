@@ -20,7 +20,7 @@ class OrderRepository:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
 
-    # ── Queries ───────────────────────────────────────────────────────────────
+    # Queries
 
     async def get_by_id(self, order_id: uuid.UUID) -> Order | None:
         stmt = (
@@ -30,6 +30,8 @@ class OrderRepository:
                 selectinload(Order.items),
                 selectinload(Order.restaurant),
                 selectinload(Order.status_history),
+                selectinload(Order.customer),
+                selectinload(Order.delivery_address),
             )
         )
         result = await self.session.execute(stmt)
@@ -49,7 +51,12 @@ class OrderRepository:
 
         stmt = (
             base
-            .options(selectinload(Order.items), selectinload(Order.restaurant))
+            .options(
+                selectinload(Order.items),
+                selectinload(Order.restaurant),
+                selectinload(Order.customer),
+                selectinload(Order.delivery_address),
+            )
             .order_by(Order.created_at.desc())
             .offset(offset)
             .limit(limit)
@@ -93,6 +100,7 @@ class OrderRepository:
                 selectinload(Order.items),
                 selectinload(Order.restaurant),
                 selectinload(Order.customer),
+                selectinload(Order.delivery_address),
             )
             .order_by(Order.created_at.desc())
             .offset(offset)
@@ -142,6 +150,7 @@ class OrderRepository:
                 selectinload(Order.items),
                 selectinload(Order.restaurant),
                 selectinload(Order.customer),
+                selectinload(Order.delivery_address),
             )
             .order_by(Order.created_at.desc())
             .offset(offset)
@@ -150,7 +159,7 @@ class OrderRepository:
         result = await self.session.execute(stmt)
         return result.scalars().all(), count
 
-    # ── Mutations ─────────────────────────────────────────────────────────────
+    # Mutations
 
     async def create(self, **kwargs) -> Order:
         order = Order(**kwargs)

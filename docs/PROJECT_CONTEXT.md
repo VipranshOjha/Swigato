@@ -78,13 +78,20 @@ Every major feature should have:
 
 - Python 3.12+
 - FastAPI
-- SQLAlchemy 2.x
+- SQLAlchemy 2.x (Async)
 - Pydantic v2
 - Alembic
 - PostgreSQL
 - Redis
-- Celery
-- WebSockets
+
+## Frontend
+
+- React 19 (with Vite 8)
+- React Router v7
+- TanStack React Query v5
+- Tailwind CSS v3
+- Axios (with interceptors for token refresh rotation)
+- Lucide React (icon set)
 
 ## Authentication
 
@@ -204,11 +211,10 @@ Additional supporting tables may be added if they improve architecture.
 Current decisions:
 
 Payments:
-- Razorpay first
-- Stripe later
+- Razorpay simulation (mock flow, webhook simulation)
 
 Email:
-- AWS SES
+- AWS SES (planned)
 
 Storage:
 - Cloudflare R2 preferred
@@ -260,18 +266,25 @@ All APIs should:
 
 # Frontend
 
-Frontend currently exists as a separate application.
+The frontend is a React SPA located at `frontend/` (previously `frontend-react/`).
 
-Responsibilities:
+Stack: React 19, Vite 8, React Router v7, TanStack React Query v5, Tailwind CSS v3.
 
-- Authentication UI
-- Profile management
-- Restaurant browsing
-- Ordering flow
-- Delivery tracking
-- Admin dashboards
+Architecture:
+- `src/api/` — Axios client with interceptor-based JWT refresh
+- `src/services/` — Domain service modules (auth, cart, order, payment, etc.)
+- `src/hooks/queries/` — React Query hooks for data fetching per domain
+- `src/hooks/mutations/` — React Query mutation hooks for write operations
+- `src/hooks/realtime/` — Polling-based realtime hooks
+- `src/contexts/` — React Contexts (Auth, Cart, Toast)
+- `src/pages/` — Role-segmented page components (customer, owner, delivery, admin, auth, error)
+- `src/layouts/` — Per-role layout wrappers with navigation
+- `src/components/` — Shared UI components (cards, modals, skeletons, etc.)
+- `src/routes/` — React Router configuration with role-based guards (ProtectedRoute, RoleRoute, PublicRoute)
+- `src/constants/` — Routes and roles constants
+- `src/lib/` — React Query client and key factories
 
-Frontend should communicate exclusively through backend APIs.
+Frontend communicates exclusively through backend APIs.
 
 No mock data should remain once backend endpoints exist.
 
@@ -293,45 +306,42 @@ Completed:
 ✅ Email verification flows
 ✅ RBAC foundation
 ✅ Swagger documentation
-✅ Frontend ↔ Backend integration
 ✅ User Profile Management
 ✅ Address Management
-✅ Protected Routes
-✅ JWT Session Persistence
-✅ Automatic Token Refresh
-✅ Profile & Address Frontend Integration
 ✅ Restaurant Domain & DB Schema (Phase 3)
 ✅ Restaurant Onboarding & Owner Dashboard
 ✅ Admin Restaurant Approval & Suspension
 ✅ Public Restaurant Search & Discovery APIs
-✅ Restaurant Frontend Integration (Onboarding, Dashboards, Discovery)
 ✅ Menu Management Domain (Phase 4): Menu Category & Menu Item DB models, CRUD schemas, and API endpoints (owner and public)
-✅ Owner Menu Management UI & Public Restaurant Menu Discovery UI (Phase 4 Frontend)
 ✅ Cart Management Domain & DB Schema (Phase 5): Cart and CartItem models, repositories, schemas, and business logic
 ✅ Cart API Endpoints: Get cart, add/update/remove items, clear cart (Phase 5 API)
 ✅ Single-restaurant enforcement in Cart business rules (Phase 5 Business Logic)
-✅ Cart Frontend Integration: Floating cart overlay, cart page, item count update (Phase 5 Frontend)
 ✅ Order Management Domain (Phase 6): Order, OrderItem, and OrderStatusHistory DB models, CRUD schemas, repositories, and services
 ✅ Customer checkout order placement, cancellation, and tracking API endpoints (Phase 6 Customer APIs)
 ✅ Owner Order Management dashboard and order action APIs: accept, reject, mark preparation/ready (Phase 6 Owner APIs)
 ✅ Admin system-wide order audit logs and detailed listing APIs (Phase 6 Admin APIs)
-✅ Order Flow Frontend: Checkout page, Order History dashboard, Order detail status tracker, and Owner order manager (Phase 6 Frontend)
 ✅ Payments Domain & DB Schema (Phase 7): Payment and Refund models, repositories, schemas, and service layers
 ✅ Payment checkout integration: Payment initialization and mock Razorpay payment processing (Phase 7 APIs)
 ✅ Idempotent payment webhook receiver: Razorpay event logging and async order state transitioning (Phase 7 Webhook)
-✅ Payments Frontend Integration: Payment selection and mock checkout widget, success redirection, and admin transaction panel (Phase 7 Frontend)
 ✅ Delivery Partner Domain & DB Schema (Phase 8): DeliveryPartnerProfile and DeliveryLocationLog models, repositories, schemas, and service layers
 ✅ Delivery partner onboarding & approval workflow by Admin (Phase 8 APIs)
 ✅ Delivery partner online/offline state, location logging, and automatic order assignment matching (Phase 8 Backend Logic)
 ✅ Delivery dashboard and action status toggling: picked up, delivered (Phase 8 Delivery APIs)
-✅ Delivery Frontend Integration: Delivery Partner portal (Dashboard & Order Detail views) and Admin Delivery tracking panel (Phase 8 Frontend)
+✅ Reviews Domain (Phase 9 - Partial): Review model, repository, schemas, and API endpoints (customer submit, owner read, admin moderation)
+✅ React Frontend Migration: Full SPA built with React 19, Vite, React Router v7, TanStack React Query v5, and Tailwind CSS v3
+✅ React Frontend covers all backend domains: Auth, Profile, Addresses, Restaurants, Menus, Cart, Orders, Payments, Delivery, Reviews
+✅ Admin Dashboard: Full admin panel (restaurants, orders, payments, delivery partners, reviews)
+✅ Owner Dashboard: Full owner panel (restaurant management, menu management, order fulfillment, reviews)
+✅ Delivery Dashboard: Full delivery partner portal (availability toggle, order acceptance, delivery workflow)
+✅ Customer Flow: Full customer journey (browse, cart, checkout, payment, order tracking)
 
 Currently Working On:
 
-🔄 Reviews, Coupons, and Notifications (Phase 9)
+🔄 Coupons & Notifications (Phase 9 remaining)
 
 Next Phase:
 
+➡ Realtime Infrastructure (WebSockets / SSE for live order tracking)
 ➡ Search, Analytics, and Observability (Phase 10)
 
 ---
@@ -346,11 +356,10 @@ Next Phase:
 ✅ Phase 6: Orders
 ✅ Phase 7: Payments
 ✅ Phase 8: Delivery
+🔄 Phase 9: Reviews, Coupons, Notifications (Reviews done; Coupons & Notifications pending)
 
-🔄 Phase 9: Reviews, Coupons, Notifications
-
-⬜ Phase 10: Search, Analytics, Observability
-
+⬜ Phase 10: Realtime Infrastructure (WebSockets/SSE)
+⬜ Phase 11: Search, Analytics, Observability
 
 ---
 
@@ -368,19 +377,21 @@ Backend:
 ✅ Order endpoints active (Customer, Owner, Admin)
 ✅ Payment endpoints and webhooks active (Customer, Admin)
 ✅ Delivery & assignment matching endpoints active (Delivery Partner, Admin)
+✅ Review endpoints active (Customer submit, Owner read, Admin moderation)
 
-Frontend:
-✅ Running locally
-✅ Authentication integrated
+Frontend (React SPA at `frontend/`):
+✅ Running locally via `npm run dev`
+✅ Authentication integrated (login, register, JWT refresh)
 ✅ Profile management integrated
 ✅ Address management integrated
-✅ Protected routes enabled
+✅ Protected routes and role-based routing enabled
 ✅ Restaurant Onboarding & Dashboards integrated
 ✅ Menu listing and item availability management integrated
 ✅ Cart view, item addition, quantity updates, and cart persistence integrated
 ✅ Checkout, order tracking, and order history panels integrated
 ✅ Payment integration and admin transaction log panel integrated
 ✅ Delivery dashboard, order assignment processing, and Admin delivery overview integrated
+✅ Reviews: Customer submit, Owner review listing, Admin moderation panel integrated
 
 Testing:
 ✅ Authentication flow verified

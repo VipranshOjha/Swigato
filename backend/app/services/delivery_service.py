@@ -41,7 +41,7 @@ class DeliveryService:
         self.history_repo = OrderStatusHistoryRepository(session)
         self.order_service = OrderService(session)
 
-    # ── Profile Management ────────────────────────────────────────────────────
+    # Profile Management
 
     async def register_partner(
         self, user_id: int, payload: DeliveryPartnerRegister
@@ -119,9 +119,9 @@ class DeliveryService:
         await self.session.commit()
         return DeliveryPartnerProfileResponse.model_validate(profile)
 
-    # ── Order Assignment and Workflow ─────────────────────────────────────────
+    # Order Assignment and Workflow
 
-    async def auto_assign_order(self, order_id: uuid.UUID) -> bool:
+    async def auto_assign_order(self, order_id: uuid.UUID, exclude_partner_id: uuid.UUID | None = None) -> bool:
         """Find an available partner and assign them to the order."""
         import logging
         logger = logging.getLogger(__name__)
@@ -133,7 +133,7 @@ class DeliveryService:
         if not order or order.status != OrderStatus.READY_FOR_PICKUP or order.assigned_delivery_partner_id is not None:
             return False
 
-        partner = await self.partner_repo.find_available_partner()
+        partner = await self.partner_repo.find_available_partner(exclude_partner_id=exclude_partner_id)
         if not partner:
             # In real system, we might queue this for retry
             return False
@@ -231,19 +231,23 @@ class DeliveryService:
         order.rider_accepted_at = None
         order.assigned_delivery_partner_id = None
         
+        # Transition back to READY_FOR_PICKUP so auto_assign_order works
+        order = await self.order_service._transition_state(
+            order, OrderStatus.READY_FOR_PICKUP, changed_by=user_id,
+            notes=f"Rejected by partner {profile.id}.",
+        )
+        await self.session.commit()
+        await self.session.refresh(order)
+        
         # Try to reassign to another rider
-        assigned = await self.auto_assign_order(order.id)
+        assigned = await self.auto_assign_order(order.id, exclude_partner_id=profile.id)
         
         if not assigned:
-            # Fallback
-            order = await self.order_service._transition_state(
-                order, OrderStatus.READY_FOR_PICKUP, changed_by=user_id,
-                notes=f"Rejected by partner {profile.id}, no other riders available.",
-            )
             logger.warning(f"Order {order.id} rejected by {profile.id}. No reassignments available.")
         else:
             logger.info(f"Order {order.id} rejected by {profile.id}. Reassigned successfully.")
-        await self.session.commit()
+            
+        await self.session.refresh(order)
         return OrderDetailResponse.model_validate(order)
 
     async def mark_picked_up(self, user_id: int, order_id: uuid.UUID) -> OrderDetailResponse:
@@ -286,7 +290,7 @@ class DeliveryService:
         await self.session.commit()
         return OrderDetailResponse.model_validate(order)
 
-    # ── Admin Actions ─────────────────────────────────────────────────────────
+    # Admin Actions
 
     async def admin_list_partners(
         self, is_verified: bool | None = None, is_online: bool | None = None,

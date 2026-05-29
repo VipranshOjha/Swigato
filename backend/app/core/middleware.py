@@ -28,7 +28,7 @@ from app.redis import get_rate_limit_redis
 logger = structlog.get_logger(__name__)
 
 
-# ─── 1. Request ID ────────────────────────────────────────────────────────────
+# 1. Request ID
 
 class RequestIDMiddleware(BaseHTTPMiddleware):
     """
@@ -47,7 +47,7 @@ class RequestIDMiddleware(BaseHTTPMiddleware):
         return response
 
 
-# ─── 2. Structured Logging ────────────────────────────────────────────────────
+# 2. Structured Logging
 
 class StructuredLoggingMiddleware(BaseHTTPMiddleware):
     """
@@ -87,7 +87,7 @@ class StructuredLoggingMiddleware(BaseHTTPMiddleware):
         return response
 
 
-# ─── 3. Rate Limiting ─────────────────────────────────────────────────────────
+# 3. Rate Limiting
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
     """
@@ -140,7 +140,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         return settings.rate_limit_global_per_minute, 60
 
 
-# ─── 4. Security Headers ──────────────────────────────────────────────────────
+# 4. Security Headers
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     """
@@ -158,7 +158,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         return response
 
 
-# ─── Registration ─────────────────────────────────────────────────────────────
+# Registration
 
 def register_middleware(app: FastAPI) -> None:
     """

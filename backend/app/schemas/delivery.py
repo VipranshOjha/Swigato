@@ -14,7 +14,7 @@ from pydantic import Field
 from app.schemas.common import AppBaseModel
 
 
-# ─── Request DTOs ─────────────────────────────────────────────────────────────
+# Request DTOs
 
 class DeliveryPartnerRegister(AppBaseModel):
     """Register as a delivery partner."""
@@ -42,7 +42,7 @@ class LocationUpdate(AppBaseModel):
     longitude: float = Field(..., ge=-180, le=180)
 
 
-# ─── Response DTOs ────────────────────────────────────────────────────────────
+# Response DTOs
 
 class DeliveryPartnerProfileResponse(AppBaseModel):
     """Delivery partner profile response."""

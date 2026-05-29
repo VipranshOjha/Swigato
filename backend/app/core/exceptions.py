@@ -15,7 +15,7 @@ from fastapi import FastAPI, Request, status
 from fastapi.responses import ORJSONResponse
 
 
-# ─── Base ────────────────────────────────────────────────────────────────────
+# Base
 
 class SwigatoException(Exception):
     """Base class for all application exceptions."""
@@ -39,7 +39,7 @@ class SwigatoException(Exception):
         }
 
 
-# ─── Auth ─────────────────────────────────────────────────────────────────────
+# Auth
 
 class AuthenticationError(SwigatoException):
     status_code = status.HTTP_401_UNAUTHORIZED
@@ -72,7 +72,7 @@ class RefreshTokenInvalidError(AuthenticationError):
     message = "Refresh token is invalid or has been revoked."
 
 
-# ─── Authorization ────────────────────────────────────────────────────────────
+# Authorization
 
 class PermissionDeniedError(SwigatoException):
     status_code = status.HTTP_403_FORBIDDEN
@@ -86,7 +86,7 @@ class AccountSuspendedError(SwigatoException):
     message = "Your account has been suspended. Contact support."
 
 
-# ─── Not Found ────────────────────────────────────────────────────────────────
+# Not Found
 
 class NotFoundError(SwigatoException):
     status_code = status.HTTP_404_NOT_FOUND
@@ -124,7 +124,7 @@ class DeliveryPartnerNotFoundError(NotFoundError):
     message = "Delivery partner not found."
 
 
-# ─── Conflict / Business Logic ────────────────────────────────────────────────
+# Conflict / Business Logic
 
 class ConflictError(SwigatoException):
     status_code = status.HTTP_409_CONFLICT
@@ -199,7 +199,7 @@ class InvalidWebhookSignatureError(SwigatoException):
     message = "Webhook signature verification failed."
 
 
-# ─── Validation ───────────────────────────────────────────────────────────────
+# Validation
 
 class ValidationError(SwigatoException):
     status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
@@ -212,7 +212,7 @@ class MinOrderValueError(ValidationError):
     message = "Your order does not meet the minimum order value."
 
 
-# ─── Rate Limiting ────────────────────────────────────────────────────────────
+# Rate Limiting
 
 class RateLimitError(SwigatoException):
     status_code = status.HTTP_429_TOO_MANY_REQUESTS
@@ -220,7 +220,7 @@ class RateLimitError(SwigatoException):
     message = "Too many requests. Please try again later."
 
 
-# ─── Exception Handlers ───────────────────────────────────────────────────────
+# Exception Handlers
 
 def register_exception_handlers(app: FastAPI) -> None:
     """Register all custom exception handlers on the FastAPI app."""

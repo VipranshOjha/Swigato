@@ -1,15 +1,4 @@
-"""
-app/models/user.py
-──────────────────
-User domain models.
 
-REPLACES the old user.py which had:
-  - full_name (single field) → now first_name + last_name
-  - role (text column)      → now separate roles table with RBAC
-  - No refresh tokens, no email verification, no password reset
-  - Sync SQLAlchemy columns → now mapped_column with type annotations
-  - Base imported from database.py → now from app.models.base
-"""
 from __future__ import annotations
 
 from datetime import datetime
@@ -54,7 +43,7 @@ class User(Base, TimestampMixin, SoftDeleteMixin):
         BigInteger, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
     )
 
-    # ─── Relationships ────────────────────────────────────────────────────────
+    # Relationships
     user_roles: Mapped[list[UserRole]] = relationship(
         "UserRole",
         back_populates="user",

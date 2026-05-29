@@ -46,3 +46,51 @@ async def get_restaurant(
     if not restaurant or restaurant.approval_status != "APPROVED":
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Restaurant not found")
     return restaurant
+
+
+
+
+
+from app.schemas.review import ReviewResponse, ReviewSummaryResponse
+from app.repositories.review_repo import ReviewRepository
+
+@router.get("/{slug}/reviews", response_model=PaginatedResponse[ReviewResponse])
+async def get_restaurant_reviews(
+    slug: str,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    sort_by: str = Query("newest", description="Sort by: newest, highest_rating, lowest_rating"),
+    db: DbSession = None,
+):
+    """List reviews for a public restaurant by slug."""
+    restaurant_repo = RestaurantRepository(db)
+    restaurant = await restaurant_repo.get_by_slug(slug)
+    if not restaurant or restaurant.approval_status != "APPROVED":
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Restaurant not found")
+
+    repo = ReviewRepository(db)
+    offset = (page - 1) * page_size
+    items, total = await repo.list_by_restaurant(restaurant.id, limit=page_size, offset=offset, sort_by=sort_by)
+    
+    return PaginatedResponse.create(
+        items=[ReviewResponse.model_validate(item) for item in items],
+        total=total,
+        page=page,
+        page_size=page_size,
+    )
+
+
+@router.get("/{slug}/reviews/summary", response_model=ReviewSummaryResponse)
+async def get_restaurant_reviews_summary(
+    slug: str,
+    db: DbSession = None,
+):
+    """Get rating distribution summary for a restaurant by slug."""
+    restaurant_repo = RestaurantRepository(db)
+    restaurant = await restaurant_repo.get_by_slug(slug)
+    if not restaurant or restaurant.approval_status != "APPROVED":
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Restaurant not found")
+
+    from app.services.review_service import ReviewService
+    service = ReviewService(db)
+    return await service.get_restaurant_summary(restaurant.id)

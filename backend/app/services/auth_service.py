@@ -62,7 +62,7 @@ class AuthService:
         self.user_repo = user_repo
         self.settings = config.get_settings()
 
-    # ─── Registration ─────────────────────────────────────────────────────────
+    # Registration
 
     async def register(self, data: RegisterRequest, client_ip: str | None = None) -> User:
         """
@@ -108,7 +108,6 @@ class AuthService:
         # Create email verification token
         await self._create_email_verification(user)
 
-        # TODO Phase 9: queue verification email Celery task
 
         await logger.ainfo(
             "user_registered",
@@ -118,7 +117,7 @@ class AuthService:
 
         return user
 
-    # ─── Login ────────────────────────────────────────────────────────────────
+    # Login
 
     async def login(
         self,
@@ -180,7 +179,7 @@ class AuthService:
 
         return access_token, refresh_token_raw
 
-    # ─── Token Refresh ────────────────────────────────────────────────────────
+    # Token Refresh
 
     async def refresh_access_token(self, raw_refresh_token: str) -> tuple[str, str]:
         """
@@ -222,7 +221,7 @@ class AuthService:
 
         return access_token, new_refresh_raw
 
-    # ─── Logout ───────────────────────────────────────────────────────────────
+    # Logout
 
     async def logout(
         self,
@@ -250,7 +249,7 @@ class AuthService:
 
         await logger.ainfo("user_logged_out", user_id=user_id, all_devices=logout_all)
 
-    # ─── Email Verification ───────────────────────────────────────────────────
+    # Email Verification
 
     async def verify_email(self, token: str) -> None:
         ev = await self.user_repo.get_valid_email_verification(token)
@@ -272,9 +271,8 @@ class AuthService:
             # Silently succeed — don't reveal whether email exists
             return
         await self._create_email_verification(user)
-        # TODO Phase 9: queue email task
 
-    # ─── Password Reset ───────────────────────────────────────────────────────
+    # Password Reset
 
     async def forgot_password(self, email: str, client_ip: str | None = None) -> None:
         """
@@ -290,7 +288,6 @@ class AuthService:
         await self.user_repo.create_password_reset(
             user_id=user.id, token=token, expires_at=expires_at, ip=client_ip
         )
-        # TODO Phase 9: queue email task with reset link
 
     async def reset_password(self, data: ResetPasswordRequest) -> None:
         pr = await self.user_repo.get_valid_password_reset(data.token)
@@ -322,7 +319,7 @@ class AuthService:
         # Revoke other sessions but keep current one (don't log user out)
         await logger.ainfo("password_changed", user_id=user_id)
 
-    # ─── Helpers ──────────────────────────────────────────────────────────────
+    # Helpers
 
     async def _create_email_verification(self, user: User) -> None:
         token = create_email_verification_token()

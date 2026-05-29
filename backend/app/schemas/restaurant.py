@@ -10,7 +10,7 @@ from app.models.restaurant import ApprovalStatus, DocumentType
 from app.schemas.common import AppBaseModel
 
 
-# --- Categories ---
+# Categories
 class CategoryBase(AppBaseModel):
     name: str = Field(..., max_length=100)
     icon_url: Optional[str] = Field(None, max_length=255)
@@ -23,7 +23,7 @@ class CategoryResponse(CategoryBase):
     slug: str
 
 
-# --- Operating Hours ---
+# Operating Hours
 class OperatingHourBase(AppBaseModel):
     day_of_week: int = Field(..., ge=0, le=6, description="0 = Monday, 6 = Sunday")
     open_time: Optional[time] = None
@@ -37,7 +37,7 @@ class OperatingHourResponse(OperatingHourBase):
     id: uuid.UUID
 
 
-# --- Documents ---
+# Documents
 class DocumentBase(AppBaseModel):
     document_type: DocumentType
     file_url: str
@@ -51,7 +51,7 @@ class DocumentResponse(DocumentBase):
     created_at: datetime
 
 
-# --- Restaurant Base & Shared ---
+# Restaurant Base & Shared
 class RestaurantBase(AppBaseModel):
     name: str = Field(..., max_length=150)
     description: Optional[str] = None
@@ -100,7 +100,7 @@ class RestaurantApprovalUpdate(AppBaseModel):
     rejection_reason: Optional[str] = None
 
 
-# --- Restaurant Responses ---
+# Restaurant Responses
 class RestaurantPublicResponse(RestaurantBase):
     """What the public sees (no sensitive admin/owner data)"""
     id: uuid.UUID

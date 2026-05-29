@@ -63,7 +63,7 @@ class AuditLog(Base):
         index=True,
     )
 
-    # ─── Relationships ────────────────────────────────────────────────────────
+    # Relationships
     actor = relationship("User", foreign_keys=[actor_id])
 
     def __repr__(self) -> str:

@@ -27,7 +27,7 @@ from app.repositories.base import BaseRepository
 class UserRepository(BaseRepository[User]):
     model = User
 
-    # ─── User lookups ─────────────────────────────────────────────────────────
+    # User lookups
 
     async def get_by_id_with_roles(self, user_id: int) -> User | None:
         """Fetch user with roles eagerly loaded (avoids N+1)."""
@@ -70,7 +70,7 @@ class UserRepository(BaseRepository[User]):
         count = await self.session.scalar(stmt)
         return (count or 0) > 0
 
-    # ─── Role management ──────────────────────────────────────────────────────
+    # Role management
 
     async def get_role_by_name(self, name: str) -> Role | None:
         stmt = select(Role).where(Role.name == name)
@@ -95,7 +95,7 @@ class UserRepository(BaseRepository[User]):
                 await self.session.delete(user_role)
                 await self.session.flush()
 
-    # ─── Refresh Token management ─────────────────────────────────────────────
+    # Refresh Token management
 
     async def create_refresh_token(
         self,
@@ -146,7 +146,7 @@ class UserRepository(BaseRepository[User]):
             token.revoked_at = now
         await self.session.flush()
 
-    # ─── Email Verification ───────────────────────────────────────────────────
+    # Email Verification
 
     async def create_email_verification(
         self, user_id: int, token: str, expires_at: datetime
@@ -169,7 +169,7 @@ class UserRepository(BaseRepository[User]):
         ev.used_at = datetime.now(UTC)
         await self.session.flush()
 
-    # ─── Password Reset ───────────────────────────────────────────────────────
+    # Password Reset
 
     async def create_password_reset(
         self, user_id: int, token: str, expires_at: datetime, ip: str | None = None

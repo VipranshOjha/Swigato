@@ -1,17 +1,4 @@
-"""
-app/database.py
-───────────────
-Async SQLAlchemy 2.x engine and session factory.
 
-REPLACES the old synchronous database.py.
-
-Key changes from previous version:
-- Sync `create_engine` → async `create_async_engine` (asyncpg driver)
-- `SessionLocal` generator → `async_sessionmaker` + async context manager
-- `Base = declarative_base()` REMOVED — Base lives in app/models/base.py
-- `Base.metadata.create_all()` REMOVED — Alembic owns the schema
-- `get_db()` sync → `get_session()` async, auto-commits/rolls back
-"""
 from __future__ import annotations
 
 from collections.abc import AsyncGenerator

@@ -64,7 +64,7 @@ class DeliveryPartnerProfile(Base, TimestampMixin):
     total_deliveries: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     total_earnings: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False, default=0.0)
 
-    # ─── Relationships ────────────────────────────────────────────────────────
+    # Relationships
     user: Mapped["User"] = relationship("User", foreign_keys=[user_id])
 
     def __repr__(self) -> str:
@@ -93,7 +93,7 @@ class DeliveryLocationLog(Base):
         nullable=False,
     )
 
-    # ─── Relationships ────────────────────────────────────────────────────────
+    # Relationships
     delivery_partner: Mapped["DeliveryPartnerProfile"] = relationship(
         "DeliveryPartnerProfile", foreign_keys=[delivery_partner_id]
     )

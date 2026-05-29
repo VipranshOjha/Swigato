@@ -14,7 +14,7 @@ from pydantic import Field
 from app.schemas.common import AppBaseModel
 
 
-# ─── Request DTOs ─────────────────────────────────────────────────────────────
+# Request DTOs
 
 class OrderCreate(AppBaseModel):
     """Customer creates an order from their cart."""
@@ -27,7 +27,7 @@ class OrderRejectPayload(AppBaseModel):
     reason: str = Field(..., min_length=1, max_length=500, description="Reason for rejection")
 
 
-# ─── Response DTOs ────────────────────────────────────────────────────────────
+# Response DTOs
 
 class OrderItemResponse(AppBaseModel):
     id: uuid.UUID

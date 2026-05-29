@@ -59,7 +59,7 @@ class Payment(Base, TimestampMixin):
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending", index=True)
     payment_method: Mapped[str | None] = mapped_column(String(50), nullable=True)
 
-    # ─── Relationships ────────────────────────────────────────────────────────
+    # Relationships
     order: Mapped["Order"] = relationship("Order")
     customer: Mapped["User"] = relationship("User")
     events: Mapped[List["PaymentEvent"]] = relationship(
@@ -106,7 +106,7 @@ class PaymentEvent(Base):
         nullable=False,
     )
 
-    # ─── Relationships ────────────────────────────────────────────────────────
+    # Relationships
     payment: Mapped["Payment"] = relationship("Payment", back_populates="events")
 
     def __repr__(self) -> str:
@@ -128,7 +128,7 @@ class Refund(Base, TimestampMixin):
     reason: Mapped[str | None] = mapped_column(Text, nullable=True)
     status: Mapped[str] = mapped_column(String(50), nullable=False, default="pending")
 
-    # ─── Relationships ────────────────────────────────────────────────────────
+    # Relationships
     payment: Mapped["Payment"] = relationship("Payment", back_populates="refunds")
 
     def __repr__(self) -> str:

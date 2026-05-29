@@ -9,7 +9,7 @@ from pydantic import Field
 from app.schemas.common import AppBaseModel
 
 
-# --- Menu Categories ---
+# Menu Categories
 class MenuCategoryBase(AppBaseModel):
     name: str = Field(..., max_length=100)
     description: Optional[str] = None
@@ -35,7 +35,7 @@ class MenuCategoryResponse(MenuCategoryBase):
     updated_at: datetime
 
 
-# --- Menu Items ---
+# Menu Items
 class MenuItemBase(AppBaseModel):
     name: str = Field(..., max_length=150)
     description: Optional[str] = None
@@ -77,6 +77,6 @@ class MenuItemResponse(MenuItemBase):
     updated_at: datetime
 
 
-# --- Grouped Responses ---
+# Grouped Responses
 class MenuCategoryWithItemsResponse(MenuCategoryResponse):
     items: List[MenuItemResponse] = []

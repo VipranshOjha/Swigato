@@ -31,7 +31,7 @@ class MenuService:
                 detail="Restaurant must be APPROVED to manage menu"
             )
 
-    # --- Menu Categories ---
+    # Menu Categories
 
     async def create_category(self, restaurant_id: uuid.UUID, user_id: int, payload: MenuCategoryCreate) -> MenuCategory:
         await self._verify_restaurant_owner(restaurant_id, user_id)
@@ -83,7 +83,7 @@ class MenuService:
         await self.category_repo.delete(category)
         await self.db.commit()
 
-    # --- Menu Items ---
+    # Menu Items
 
     async def create_item(self, restaurant_id: uuid.UUID, user_id: int, payload: MenuItemCreate) -> MenuItem:
         await self._verify_restaurant_owner(restaurant_id, user_id)
@@ -147,7 +147,7 @@ class MenuService:
         await self.item_repo.delete(item)
         await self.db.commit()
 
-    # --- Public API ---
+    # Public API
     
     async def get_public_menu(self, restaurant_id: uuid.UUID) -> Sequence[MenuCategory]:
         """Returns categories with their items eagerly loaded for the public view."""

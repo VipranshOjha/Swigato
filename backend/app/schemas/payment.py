@@ -15,7 +15,7 @@ from app.constants import PaymentGateway, PaymentStatus, RefundStatus
 from app.schemas.common import AppBaseModel
 
 
-# ─── Request DTOs ─────────────────────────────────────────────────────────────
+# Request DTOs
 
 class PaymentInitializeRequest(AppBaseModel):
     """Customer initializes a payment for an existing order."""
@@ -35,7 +35,7 @@ class WebhookPayload(AppBaseModel):
     pass
 
 
-# ─── Response DTOs ────────────────────────────────────────────────────────────
+# Response DTOs
 
 class PaymentEventResponse(AppBaseModel):
     id: uuid.UUID

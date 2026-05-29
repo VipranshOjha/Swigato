@@ -96,6 +96,10 @@ class Restaurant(Base, TimestampMixin, SoftDeleteMixin):
     base_delivery_fee: Mapped[float] = mapped_column(Numeric(10, 2), default=0.0, nullable=False)
     free_delivery_above: Mapped[Optional[float]] = mapped_column(Numeric(10, 2), nullable=True)
     
+    # Reviews
+    average_rating: Mapped[float] = mapped_column(Numeric(3, 2), server_default="0.0", nullable=False)
+    total_reviews: Mapped[int] = mapped_column(Integer, server_default="0", nullable=False)
+    
     # Status
     is_open: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     approval_status: Mapped[ApprovalStatus] = mapped_column(
@@ -128,6 +132,9 @@ class Restaurant(Base, TimestampMixin, SoftDeleteMixin):
     )
     menu_items: Mapped[List["MenuItem"]] = relationship(
         "MenuItem", back_populates="restaurant", cascade="all, delete-orphan"
+    )
+    reviews: Mapped[List["Review"]] = relationship(
+        "Review", back_populates="restaurant", cascade="all, delete-orphan"
     )
 
 

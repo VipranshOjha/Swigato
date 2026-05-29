@@ -61,12 +61,16 @@ ORDER_TRANSITIONS: dict[OrderStatus, set[OrderStatus]] = {
     },
     OrderStatus.RIDER_ASSIGNED: {
         OrderStatus.PICKED_UP,
+        OrderStatus.READY_FOR_PICKUP,
+        OrderStatus.CANCELLED,
     },
     OrderStatus.PICKED_UP: {
         OrderStatus.IN_TRANSIT,
+        OrderStatus.CANCELLED,
     },
     OrderStatus.IN_TRANSIT: {
         OrderStatus.DELIVERED,
+        OrderStatus.CANCELLED,
     },
     OrderStatus.DELIVERED: set(),
     OrderStatus.REJECTED: {

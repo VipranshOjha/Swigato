@@ -101,7 +101,7 @@ class RestaurantService:
         
         return await self.repo.update(restaurant, **{"approval_status": ApprovalStatus.PENDING_APPROVAL})
 
-    # --- Admin Methods ---
+    # Admin Methods
 
     async def approve_restaurant(self, restaurant_id: uuid.UUID, admin_id: int) -> Restaurant:
         restaurant = await self.get_by_id(restaurant_id)
